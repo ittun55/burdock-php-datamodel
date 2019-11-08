@@ -1,0 +1,24 @@
+{
+    "name": "burdock/php-datamodel",
+    "type": "library",
+    "description": "",
+    "authors": [
+        {
+            "name": "Hiraku Saito",
+            "email": "ittun55@gmail.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Burdock\\Model\\": "src/Model"
+        }
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^8.3",
+        "vlucas/phpdotenv": "^3.4"
+    },
+    "require": {
+        "ext-pdo": "*",
+        "psr/log": "^1.1"
+    }
+}

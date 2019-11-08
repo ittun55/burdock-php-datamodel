@@ -1,0 +1,11 @@
+.env
+config.json
+config.yaml
+config.toml
+config.ini
+/dst/
+/tests/tmp/
+/.phpunit.result.cache
+/.idea/
+/vendor/
+/*_test.sh
