@@ -14,10 +14,10 @@ use InvalidArgumentException;
 //Todo: 発行したクエリをログとして参照したい
 
 /**
- * Class Base
+ * Class Model
  * @package DataModel
  */
-class Base
+class Model
 {
     protected static $logger;
 
@@ -36,7 +36,7 @@ class Base
     /**
      *  対応するテーブル名の定義
      */
-    protected static $table_name = 'base_table';
+    protected static $table_name = '';
 
     /**
      * モデルに対するテーブル名を返す
@@ -45,6 +45,8 @@ class Base
      */
     public static function getTableName()
     {
+        if (!static::$table_name)
+            throw new InvalidArgumentException('table_name not defined');
         return static::$table_name;
     }
 
@@ -52,69 +54,7 @@ class Base
      *  @var array テーブルに定義されているフィールド名の一覧
      *  ここで定義しているのはテストとサンプル目的
      */
-    protected static $fields = [
-        'id' => [
-            'type' => 'integer',
-            'unsigned' => true,
-            'primary' => true,
-            'autoincrement' => true
-        ],
-        'pkey_2' => [
-            'type' => 'integer',
-            'primary' => true,
-            'comment' => "primary が true の場合、required も true"
-        ],
-        'pkey_3' => [
-            'type' => 'integer',
-            'primary' => true,
-            'default' => 0
-        ],
-        'ukey_1' => [
-            'type' => 'string',
-            'default' => 'A',
-            'unique' => 'ukey_123'
-        ],
-        'ukey_2' => [
-            'type' => 'string',
-            'default' => 'B',
-            'unique' => 'ukey_123'
-        ],
-        'ukey_3' => [
-            'type' => 'string',
-            'default' => 'C',
-            'unique' => 'ukey_123'
-        ],
-        'email'  => [
-            'type' => 'string',
-            'required' => true
-        ],
-        'status' => [
-            'type' => 'string',
-            'index' => 'idx_status'
-        ],
-        'created_at' => [
-            'type' => 'datetime(3)',
-            'required' => true
-        ], // datetime not null
-        'created_by' => [
-            'type' => 'string',
-            'required' => true
-        ], // varchar(255) not null
-        'updated_at' => [
-            'type' => 'datetime(3)',
-            'required' => true
-        ], // datetime not null
-        'updated_by' => [
-            'type' => 'string',
-            'required' => true
-        ], // varchar(255) not null
-        'deleted_at' => [
-            'type' => 'datetime(3)'
-        ],   // datetime not null
-        'deleted_by' => [
-            'type' => 'string'
-        ],  // varchar(255) not null
-    ];
+    protected static $fields = [];
 
     /**
      * @param bool $with_hidden
@@ -143,20 +83,6 @@ class Base
         }
         return $fields;
     }
-
-    /**
-     *  フィールドが実名またはエイリアスに存在するか確認する
-     *  クエリの中ではフィールドのエイリアスは指定不可とする
-     *
-     *  @param $field
-     *  @return bool
-    public static function isAvailable($field)
-    {
-        if (array_key_exists($field, static::$_field_aliases))
-            $field = static::$_field_aliases[$field];
-        return in_array($field, self::$fields);
-    }
-     */
 
     /**
      * プライマリキーを返す
@@ -224,29 +150,33 @@ class Base
     }
 
     /**
-     * @var PDO 接続済み (であって欲しい) PDOインスタンス
+     * @var PDO connection objects
      */
-    protected static $_pdo = null;
+    protected static $_pdo_container = [];
 
     /**
      * 接続済み (であって欲しい) PDOインスタンスを設定
      *
-     * @param $pdo PDO PDO オブジェクト
+     * @param $pdo PDO connection object
+     * @param string $name Connection name
      * @return void;
      */
-    final public static function setPDOInstance($pdo)
+    final public static function setPDOInstance(PDO $pdo, $name='default'): void
     {
-        self::$_pdo = $pdo;
+        self::$_pdo_container[$name] = $pdo;
     }
 
     /**
      * 接続済みPDOオブジェクトを取得
      *
-     * @return PDO PDO オブジェクト
+     * @param string $name Connection name
+     * @return PDO connection object
      */
-    final public static function getPDOInstance()
+    final public static function getPDOInstance($name='default'): PDO
     {
-        return self::$_pdo;
+        if (!isset(self::$_pdo_container[$name]))
+            throw new InvalidArgumentException("Connection named : ${name} was not found.");
+        return self::$_pdo_container[$name];
     }
 
     /**
@@ -459,8 +389,7 @@ class Base
         $stmt = self::execute($sql, $bind);
         $fetch_mode = isset($opts[static::FETCH_MODE]) ? $opts[static::FETCH_MODE] : PDO::FETCH_ASSOC;
         if ($fetch_mode == PDO::FETCH_CLASS) {
-            $class = __CLASS__;
-            return $stmt->fetchAll(PDO::FETCH_CLASS, $class);
+            return $stmt->fetchAll(PDO::FETCH_CLASS, static::class);
         } else {
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
@@ -534,7 +463,7 @@ class Base
      * @param null $opts オプション
      *     static::WITH_HIDDEN  => false|true,
      *     static::WITH_DELETED => false|true,
-     * @return Base|null
+     * @return Model|null
      * @throws Exception
      */
     public static function findById($data, $opts=null)
@@ -571,7 +500,7 @@ class Base
         $dt = self::getMsecDate();
         $me->created_at = $dt;
         $me->updated_at = $dt;
-        list($sql, $ctx) = Sql::buildInsertQuery(static::$table_name, static::$fields, $me->_data, $ignore);
+        list($sql, $ctx) = Sql::buildInsertQuery(static::getTableName(), static::$fields, $me->_data, $ignore);
         $pdo = self::getPDOInstance();
         $stmt = $pdo->prepare($sql);
         if (!$stmt->execute($ctx)) {
@@ -593,7 +522,7 @@ class Base
     {
         $dt = self::getMsecDate();
         $this->updated_at = $dt;
-        list($sql, $ctx) = Sql::buildUpdateQuery(static::$table_name, static::$fields, static::getPrimaryKeys(), $this->_data);
+        list($sql, $ctx) = Sql::buildUpdateQuery(static::getTableName(), static::$fields, static::getPrimaryKeys(), $this->_data);
         $pdo = self::getPDOInstance();
         $stmt = $pdo->prepare($sql);
         if (!$stmt->execute($ctx)) {

@@ -1,11 +1,12 @@
 <?php
-use PHPUnit\Framework\TestCase;
-use Burdock\DataModel\Base;
 use Burdock\DataModel\Sql;
+use PHPUnit\Framework\TestCase;
 use Dotenv\Dotenv;
 
+require_once (__DIR__ . '/Samples.php');
+
 //Todo: ORDER_BY など WHERE 句以外のテスト追加
-class BaseTest extends TestCase
+class SamplesTest extends TestCase
 {
     private static $pdo = null;
 
@@ -23,21 +24,21 @@ class BaseTest extends TestCase
         self::$pdo = new PDO($dsn, $username, $password, $options);
 
         // 対象テーブルの削除
-        $sql = 'DROP TABLE IF EXISTS ' . Base::getTableName();
+        $sql = 'DROP TABLE IF EXISTS ' . Samples::getTableName();
         self::$pdo->query($sql);
 
         // 対象テーブルの新規作成
-        Base::setPDOInstance(self::$pdo);
+        Samples::setPDOInstance(self::$pdo);
         $with_hidden = true;
-        $sql = Sql::getCreateTableQuery(Base::getTableName(), Base::getFields($with_hidden));
+        $sql = Sql::getCreateTableQuery(Samples::getTableName(), Samples::getFields($with_hidden));
         self::$pdo->query($sql);
-        self::$pdo->query('TRUNCATE TABLE ' . Base::getTableName());
+        self::$pdo->query('TRUNCATE TABLE ' . Samples::getTableName());
     }
 
     public static function tearDownAfterClass(): void
     {
         //self::$pdo->query('drop table base_table;');
-        //Base::setPDOInstance(null);
+        //Samples::setPDOInstance(null);
     }
 
     /**
@@ -46,7 +47,7 @@ class BaseTest extends TestCase
     public function test_1_配列からインスタンス変数に値を設定する()
     {
         $test_msg = '_f3 is a private property.';
-        $b1 = new Base();
+        $b1 = new Samples();
         $b1->setData(array('ukey_1'=>'abc','ukey_2'=>'xyz', 'ukey_3'=>$test_msg));
         $this->assertEquals('abc', $b1->ukey_1);
         $this->assertEquals($test_msg, $b1->ukey_3);
@@ -58,7 +59,7 @@ class BaseTest extends TestCase
     public function test_2_存在しないプロパティにアクセスすると例外が発生する()
     {
         $this->expectException(InvalidArgumentException::class);
-        $b = new Base();
+        $b = new Samples();
         $b->nonExistingProperty;
     }
 
@@ -67,10 +68,10 @@ class BaseTest extends TestCase
      */
     public function test_3_同じクラスのインスタンスからコンストラクタ経由で値を設定する()
     {
-        $b = new Base();
+        $b = new Samples();
         $b->id = 0;
         $b->ukey_1 = 'abc';
-        $bx = new Base($b);
+        $bx = new Samples($b);
         $this->assertEquals($b->id, $bx->id);
         $this->assertEquals($b->ukey_1, $bx->ukey_1);
     }
@@ -80,10 +81,10 @@ class BaseTest extends TestCase
      */
     public function test_4_同じクラスのインスタンスからsetDataメソッド経由で値を設定する()
     {
-        $b = new Base();
+        $b = new Samples();
         $b->id = 0;
         $b->ukey_1 = 'abc';
-        $bx = new Base();
+        $bx = new Samples();
         $bx->setData($b);
         $this->assertEquals($b->id, $bx->id);
         $this->assertEquals($b->ukey_1, $bx->ukey_1);
@@ -97,7 +98,7 @@ class BaseTest extends TestCase
         $d = new stdClass();
         $d->pkey_2 = 999;
         $d->ukey_2 = 'some contents';
-        $bx = new Base($d);
+        $bx = new Samples($d);
         $this->assertEquals($d->pkey_2, $bx->pkey_2);
         $this->assertEquals($d->ukey_2, $bx->ukey_2);
     }
@@ -110,7 +111,7 @@ class BaseTest extends TestCase
         $d = new stdClass();
         $d->pkey_2 = 999;
         $d->ukey_2 = 'some contents';
-        $bx = new Base();
+        $bx = new Samples();
         $bx->setData($d);
         $this->assertEquals($d->pkey_2, $bx->pkey_2);
         $this->assertEquals($d->ukey_2, $bx->ukey_2);
@@ -118,12 +119,12 @@ class BaseTest extends TestCase
 
     /**
      * @test
-     * @return Base
+     * @return Samples
      * @throws Exception
      */
     public function test_7_レコードインサートとアップデート()
     {
-        $b = new Base();
+        $b = new Samples();
         $b->pkey_2 = 100;
         $b->pkey_3 = 200;
         $b->ukey_1 = 'abc';
@@ -134,11 +135,11 @@ class BaseTest extends TestCase
         $b->created_by = 'test';
         //$b->updated_at = $dt;
         $b->updated_by = 'test';
-        $b = Base::insert($b);
+        $b = Samples::insert($b);
         $updated_at = $b->updated_at;
         $b->ukey_2 = 'xyz';
         $b->update();
-        $c = Base::findById(Base::convertData($b));
+        $c = Samples::findById(Samples::convertData($b));
         $this->assertEquals($c->ukey_2, $b->ukey_2);
         $this->assertNotEquals($updated_at, $b->updated_at);
         return $c;
@@ -152,23 +153,23 @@ class BaseTest extends TestCase
     public function test_8_findを使ったレコード取得($obj)
     {
         $obj->ukey_3 = 'C1';
-        Base::insert($obj);
+        Samples::insert($obj);
         $obj->ukey_3 = 'C2';
-        Base::insert($obj);
+        Samples::insert($obj);
         $obj->ukey_3 = 'C3';
-        Base::insert($obj);
+        Samples::insert($obj);
         // WHERE句指定のない find
-        $results = Base::find([], [Base::FETCH_MODE => PDO::FETCH_CLASS]);
+        $results = Samples::find([], [Samples::FETCH_MODE => PDO::FETCH_CLASS]);
         $this->assertEquals(4, count($results));
-        $this->assertInstanceOf(Burdock\DataModel\Base::class, $results[0]);
+        $this->assertInstanceOf(Samples::class, $results[0]);
         //Todo: Baseクラスのインスタンスであることを確認する
-        $results = Base::find([Sql::WHERE => ['id' => 2]]);
+        $results = Samples::find([Sql::WHERE => ['id' => 2]]);
         $this->assertEquals(1, count($results));
         //$obj = $results[0];
         //$this->assertFalse($obj->isDirty());
         //$obj->ukey_2 = 'zzzzzzz';
         //$this->assertTrue($obj->isDirty());
-        $results = Base::find([
+        $results = Samples::find([
             Sql::WHERE => [
                 Sql:: OR => [
                     ['id' => 2],
@@ -181,20 +182,20 @@ class BaseTest extends TestCase
 
     public function test_findByIdsのwhere句生成テスト()
     {
-        $model = new Base(['id' => 3, 'pkey_2' => 5, 'pkey_3' => 9]);
+        $model = new Samples(['id' => 3, 'pkey_2' => 5, 'pkey_3' => 9]);
         $params = [
             Sql::SELECT => ['@@*'],
-            Sql::FROM  => Base::getTableName(),
-            Sql::WHERE => Sql::getPrimaryKeyConditions(Base::getPrimaryKeys(), Base::convertData($model))
+            Sql::FROM  => Samples::getTableName(),
+            Sql::WHERE => Sql::getPrimaryKeyConditions(Samples::getPrimaryKeys(), Samples::convertData($model))
         ];
         list($sql, $bind) = Sql::buildQuery($params);
-        $expected = 'SELECT * FROM `base_table` WHERE (`id` = :id__0 AND `pkey_2` = :pkey_2__1 AND `pkey_3` = :pkey_3__2)';
+        $expected = 'SELECT * FROM `samples` WHERE (`id` = :id__0 AND `pkey_2` = :pkey_2__1 AND `pkey_3` = :pkey_3__2)';
         $this->assertEquals($expected, $sql);
     }
 
     public function test_count()
     {
-        $results = Base::count([
+        $results = Samples::count([
             Sql::WHERE => [
                 Sql:: OR => [
                     ['id' => 2],
@@ -207,13 +208,13 @@ class BaseTest extends TestCase
 
     public function test_paginate()
     {
-        $result = Base::paginate([
+        $result = Samples::paginate([
             'page' => 1,
             'limit' => 2
         ]);
         $this->assertEquals(1, $result['page']);
         $this->assertEquals(2, count($result['items']));
-        $result = Base::paginate([
+        $result = Samples::paginate([
             'page' => 3,
             'limit' => 3
         ]);

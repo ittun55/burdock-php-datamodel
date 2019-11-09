@@ -6,8 +6,8 @@ use \InvalidArgumentException;
 
 class Sql
 {
-    const SELECT = 'SELECT';
-    const FROM   = 'FROM';
+    const SELECT = 'select';
+    const FROM   = 'from';
     const JOIN   = 'join';
     const WHERE  = 'where';
     const AND = 'and';
