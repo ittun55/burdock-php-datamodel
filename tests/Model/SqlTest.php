@@ -2,7 +2,7 @@
 
 use Dotenv\Dotenv;
 use PHPUnit\Framework\TestCase;
-use Burdock\Model\Sql;
+use Burdock\DataModel\Sql;
 
 class SqlTest extends TestCase
 {

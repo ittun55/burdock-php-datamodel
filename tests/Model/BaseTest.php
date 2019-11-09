@@ -1,14 +1,13 @@
 <?php
 use PHPUnit\Framework\TestCase;
-use Burdock\Model\Base;
-use Burdock\Model\Sql;
+use Burdock\DataModel\Base;
+use Burdock\DataModel\Sql;
 use Dotenv\Dotenv;
 
 //Todo: ORDER_BY など WHERE 句以外のテスト追加
 class BaseTest extends TestCase
 {
     private static $pdo = null;
-    private $target = null;
 
     public static function setUpBeforeClass(): void
     {
@@ -161,7 +160,7 @@ class BaseTest extends TestCase
         // WHERE句指定のない find
         $results = Base::find([], [Base::FETCH_MODE => PDO::FETCH_CLASS]);
         $this->assertEquals(4, count($results));
-        $this->assertInstanceOf('Burdock\Model\Base', $results[0]);
+        $this->assertInstanceOf(Burdock\DataModel\Base::class, $results[0]);
         //Todo: Baseクラスのインスタンスであることを確認する
         $results = Base::find([Sql::WHERE => ['id' => 2]]);
         $this->assertEquals(1, count($results));

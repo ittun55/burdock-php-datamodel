@@ -1,5 +1,5 @@
 <?php
-namespace Burdock\Model;
+namespace Burdock\DataModel;
 
 use Exception;
 use \InvalidArgumentException;

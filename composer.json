@@ -10,7 +10,7 @@
     ],
     "autoload": {
         "psr-4": {
-            "Burdock\\Model\\": "src/Model"
+            "Burdock\\DataModel\\": "src/DataModel"
         }
     },
     "require-dev": {

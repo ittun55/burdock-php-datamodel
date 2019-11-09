@@ -1,5 +1,5 @@
 <?php
-namespace Burdock\Model;
+namespace Burdock\DataModel;
 
 use PDO;
 use Exception;
@@ -150,7 +150,8 @@ class Base
      *
      *  @param $field
      *  @return bool
-    public static function isAvailable($field) {
+    public static function isAvailable($field)
+    {
         if (array_key_exists($field, static::$_field_aliases))
             $field = static::$_field_aliases[$field];
         return in_array($field, self::$fields);
