@@ -3,6 +3,7 @@ namespace Burdock\DataModel;
 
 use PDO;
 use Exception;
+use PDOStatement;
 use Psr\Log\NullLogger;
 use Psr\Log\LoggerInterface;
 use InvalidArgumentException;
@@ -15,12 +16,19 @@ use InvalidArgumentException;
 
 /**
  * Class Model
+ * @property string updated_at
  * @package DataModel
  */
 class Model
 {
+    /**
+     * @var LoggerInterface
+     */
     protected static $logger;
 
+    /**
+     * @param LoggerInterface $logger
+     */
     public static function setLogger(LoggerInterface $logger)
     {
         static::$logger = $logger;
@@ -51,12 +59,13 @@ class Model
     }
 
     /**
-     *  @var array テーブルに定義されているフィールド名の一覧
-     *  ここで定義しているのはテストとサンプル目的
+     *  @var array field definitions
      */
     protected static $fields = [];
 
     /**
+     * Getting field definitions of this model.
+     *
      * @param bool $with_hidden
      * @return array
      */
@@ -72,6 +81,12 @@ class Model
         return $fields;
     }
 
+    /**
+     * Getting field names only
+     *
+     * @param bool $with_hidden
+     * @return array
+     */
     public static function getFieldNames($with_hidden=false): array
     {
         $_fields = array_keys(static::$fields);
@@ -85,7 +100,8 @@ class Model
     }
 
     /**
-     * プライマリキーを返す
+     * Getting primary key field definitions
+     *
      * @return array
      */
     public static function getPrimaryKeys()
@@ -98,55 +114,44 @@ class Model
     }
 
     /**
-     * @var array データキャッシュ：インスタンス変数の値はここに保存される
-     * ここにはエイリアスは含まれず、正規のフィールド名でのみ、格納されている
+     * @var array model data cache
      */
     protected $_data = [];
 
     /**
-     * @var array|null データベースからロードされた場合、ここにロード時のデータを保存
+     * @var array storage for the pair of modified field and original value
      */
-    protected $_dbValues = null;
-
-    protected $_fromDB = false;
+    protected $_dirty_fields = [];
 
     /**
-     * フィールドに更新があるかどうか
+     * Save original value if modified
+     * 
+     * @param string $field
+     * @param $value
+     */
+    protected function setDirtyField(string $field, $value): void
+    {
+        if (array_key_exists($field, $this->_dirty_fields))
+            return;
+        $this->_dirty_fields[$field] = $value;
+    }
+
+    /**
+     * If the record has been modified or not
+     *
      * @param null $fields
      * @return bool
      */
-    public function isDirty($fields=null)
+    public function isDirty($fields=null): bool
     {
-        $ret = false;
         if (is_null($fields)) {
-            foreach (static::$fields as $field => $attrs) {
-                if (array_key_exists($field, $this->_data) &&
-                    !array_key_exists($field, $this->_dbValues)) {
-                    $ret = true;
-                    break;
-                }
-                if ($this->_data[$field] !== $this->_dbValues[$field]) {
-                    $ret = true;
-                    break;
-                }
-            }
-        } elseif (is_array($fields)) {
-            foreach ($fields as $field) {
-                if (array_key_exists($field, $this->_data) &&
-                    !array_key_exists($field, $this->_dbValues)) {
-                    $ret = true;
-                    break;
-                }
-                if ($this->_data[$field] !== $this->_dbValues[$field]) {
-                    $ret = true;
-                    break;
-                }
-            }
+            return (count(array_keys($this->_dirty_fields)) === 0) ? false : true;
         } else {
-            $field = $fields;
-            $ret = ($this->_data[$field] !== $this->_dbValues[$field]);
+            foreach ($fields as $field) {
+                if (array_key_exists($field, $this->_dirty_fields)) return true;
+            }
+            return false;
         }
-        return $ret;
     }
 
     /**
@@ -187,9 +192,6 @@ class Model
     public function __construct($data=null)
     {
         $this->setData($data);
-        if ($this->_fromDB) {
-            $this->_dbValues = $this->_data;
-        }
     }
 
     /**
@@ -265,13 +267,9 @@ class Model
      */
     public function set($key, $value)
     {
-        if (array_key_exists($key, static::$fields) ||
-            $this->_isPrivate($key)) {
-            if ($key == '_fromDB') {
-                $this->_fromDB = $value;
-            }
+        if (array_key_exists($key, static::$fields) || $this->_isPrivate($key)) {
+            $this->setDirtyField($key, $value);
             $this->_data[$key] = $value;
-
             return;
         }
         $msg = $this->getKeyNotFoundMessage($key);
@@ -386,6 +384,9 @@ class Model
         }
 
         list($sql, $bind) = Sql::buildQuery($params);
+        $logger = static::getLogger();
+        $logger->debug($sql);
+        $logger->debug(var_export($bind, true));
         $stmt = self::execute($sql, $bind);
         $fetch_mode = isset($opts[static::FETCH_MODE]) ? $opts[static::FETCH_MODE] : PDO::FETCH_ASSOC;
         if ($fetch_mode == PDO::FETCH_CLASS) {
@@ -413,10 +414,19 @@ class Model
         }
 
         list($sql, $bind) = Sql::buildCountQuery($params);
+        $logger = static::getLogger();
+        $logger->debug($sql);
+        $logger->debug(var_export($bind, true));
         return self::execute($sql, $bind)->fetchColumn();
     }
 
-    public static function execute($sql, $bind): \PDOStatement
+    /**
+     * @param $sql
+     * @param $bind
+     * @return PDOStatement
+     * @throws Exception
+     */
+    public static function execute($sql, $bind): PDOStatement
     {
         $pdo  = self::getPDOInstance();
         $stmt = $pdo->prepare($sql);
@@ -431,6 +441,11 @@ class Model
         return $stmt;
     }
 
+    /**
+     * @param $params
+     * @return array
+     * @throws Exception
+     */
     public static function paginate($params): array
     {
         $current_page = isset($params['page']) ? (int)$params['page'] : 1;
@@ -457,7 +472,7 @@ class Model
     }
 
     /**
-     * プライマリキーでレコードを検索
+     * find one record by using primary key(s)
      *
      * @param $data array この場合、引数に指定できるデータは、プライマリキーと値の連想配列、クラスインスタンスのどちらか
      * @param null $opts オプション
@@ -488,6 +503,7 @@ class Model
     {
         return date("Y-m-d H:i:s") . '.' . substr(explode('.', (microtime(true) . ''))[1], 0, 3);
     }
+
     /**
      * @param $data mixed
      * @param $ignore bool
@@ -496,16 +512,19 @@ class Model
      */
     public static function insert($data, $ignore=false)
     {
+        $logger = static::getLogger();
         $me = ($data instanceof static) ? $data : new static($data);
         $dt = self::getMsecDate();
         $me->created_at = $dt;
         $me->updated_at = $dt;
         list($sql, $ctx) = Sql::buildInsertQuery(static::getTableName(), static::$fields, $me->_data, $ignore);
+        $logger->debug($sql);
+        $logger->debug(var_export($ctx, true));
         $pdo = self::getPDOInstance();
         $stmt = $pdo->prepare($sql);
         if (!$stmt->execute($ctx)) {
-            echo $stmt->errorCode() . PHP_EOL;
-            echo var_export($stmt->errorInfo(), true) . PHP_EOL;
+            $logger->error($stmt->errorCode());
+            $logger->error(var_export($stmt->errorInfo(), true));
             throw new Exception('INSERT Query was failed : '.$sql);
         }
         $me->id = $pdo->lastInsertId();
@@ -520,14 +539,18 @@ class Model
      */
     public function update()
     {
+        $logger = static::getLogger();
         $dt = self::getMsecDate();
         $this->updated_at = $dt;
         list($sql, $ctx) = Sql::buildUpdateQuery(static::getTableName(), static::$fields, static::getPrimaryKeys(), $this->_data);
+        $logger->debug($sql);
+        $logger->debug(var_export($ctx, true));
         $pdo = self::getPDOInstance();
         $stmt = $pdo->prepare($sql);
         if (!$stmt->execute($ctx)) {
-            echo $stmt->errorCode() . PHP_EOL;
-            echo var_export($stmt->errorInfo(), true) . PHP_EOL;
+            $logger = static::getLogger();
+            $logger->error($stmt->errorCode());
+            $logger->error(var_export($stmt->errorInfo(), true));
             throw new Exception('UPDATE Query was failed : '.$sql);
         }
         return $this;

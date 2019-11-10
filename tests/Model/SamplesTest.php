@@ -2,6 +2,8 @@
 use Burdock\DataModel\Sql;
 use PHPUnit\Framework\TestCase;
 use Dotenv\Dotenv;
+use Monolog\Logger;
+use Monolog\Handler\StreamHandler;
 
 require_once (__DIR__ . '/Samples.php');
 
@@ -41,6 +43,18 @@ class SamplesTest extends TestCase
         //Samples::setPDOInstance(null);
     }
 
+    public function setUp(): void
+    {
+        parent::setUp();
+        self::setLogger();
+    }
+
+    public static function setLogger()
+    {
+        $logger = new Logger('DataModelTest');
+        $logger->pushHandler(new StreamHandler('php://stderr', Logger::DEBUG));
+        Samples::setLogger($logger);
+    }
     /**
      * @test
      */
@@ -69,8 +83,11 @@ class SamplesTest extends TestCase
     public function test_3_同じクラスのインスタンスからコンストラクタ経由で値を設定する()
     {
         $b = new Samples();
+        $this->assertFalse($b->isDirty());
         $b->id = 0;
         $b->ukey_1 = 'abc';
+        $this->assertTrue($b->isDirty());
+        $this->assertTrue($b->isDirty(['ukey_1']));
         $bx = new Samples($b);
         $this->assertEquals($b->id, $bx->id);
         $this->assertEquals($b->ukey_1, $bx->ukey_1);
