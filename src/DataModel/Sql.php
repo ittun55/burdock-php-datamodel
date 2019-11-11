@@ -244,7 +244,7 @@ class Sql
         }
 
         // primary_key フィールドによる WHERE句の生成
-        $w_params = self::getPrimaryKeyConditions($primary_keys, $data);
+        $w_params = [Sql::WHERE => Sql::getPrimaryKeyConditions($primary_keys, $data)];
         list($where, $ctx) = self::getWhereClause($w_params, $ctx);
 
         // プリペアードステートメントの生成と値のバインド

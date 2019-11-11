@@ -136,7 +136,7 @@ class SamplesTest extends TestCase
 
     /**
      * @test
-     * @return Samples
+     * @return \Burdock\DataModel\Model
      * @throws Exception
      */
     public function test_7_レコードインサートとアップデート()
