@@ -68,4 +68,7 @@ class Samples extends Model
             'type' => 'string'
         ],  // varchar(255) not null
     ];
+
+    //protected static $soft_delete_field = null;
+    protected static $soft_delete_field = 'deleted_at';
 }

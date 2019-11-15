@@ -64,6 +64,11 @@ class Model
     protected static $fields = [];
 
     /**
+     * @var string field name for soft deletion
+     */
+    protected static $soft_delete_field = 'deleted_at';
+
+    /**
      * Getting field definitions of this model.
      *
      * @param bool $with_hidden
@@ -375,9 +380,9 @@ class Model
             $with_hidden = isset($opts[static::WITH_HIDDEN]) ? true : false;
             $params[Sql::SELECT] = static::getFieldNames($with_hidden);
         }
-        if (!isset($opts[static::WITH_DELETED])) {
+        if (!isset($opts[static::WITH_DELETED]) && static::$soft_delete_field) {
             $where = isset($params[Sql::WHERE]) ? $params[Sql::WHERE] : [];
-            $params[Sql::WHERE] = Sql::addWhere(['deleted_at' => null], $where);
+            $params[Sql::WHERE] = Sql::addWhere([self::$soft_delete_field => null], $where);
         }
         if (!isset($params[Sql::ORDER_BY])) {
             $params[Sql::ORDER_BY] = static::getPrimaryKeys();
@@ -408,9 +413,9 @@ class Model
     {
         $params[Sql::FROM] = static::getTableName();
 
-        if (!isset($opts[static::WITH_DELETED])) {
+        if (!isset($opts[static::WITH_DELETED]) && static::$soft_delete_field) {
             $where = isset($params[Sql::WHERE]) ? $params[Sql::WHERE] : [];
-            $params[Sql::WHERE] = Sql::addWhere(['deleted_at' => null], $where);
+            $params[Sql::WHERE] = Sql::addWhere([self::$soft_delete_field => null], $where);
         }
 
         list($sql, $bind) = Sql::buildCountQuery($params);
