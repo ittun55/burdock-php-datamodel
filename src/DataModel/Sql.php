@@ -507,7 +507,7 @@ class Sql
                 throw new InvalidArgumentException($msg);
             }
             if (strncmp($item, '@@', 2) == 0) {
-                $_fields[] = $item;
+                $_fields[] = substr($item, 2);
                 continue;
             }
             list($fld, $als) = array_merge(explode(' ', $item), [null]);
