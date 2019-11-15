@@ -506,6 +506,10 @@ class Sql
                 $msg = 'SELECT field item should be "table.field alias" style string.';
                 throw new InvalidArgumentException($msg);
             }
+            if (strncmp($item, '@@', 2) == 0) {
+                $_fields[] = $item;
+                continue;
+            }
             list($fld, $als) = array_merge(explode(' ', $item), [null]);
             $f = Sql::wrap($fld);
             if ($als)
