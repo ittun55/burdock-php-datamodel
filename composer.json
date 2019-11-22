@@ -20,6 +20,7 @@
     },
     "require": {
         "ext-pdo": "*",
-        "psr/log": "^1.1"
+        "psr/log": "^1.1",
+        "iamcal/sql-parser": "^0.2.0"
     }
 }

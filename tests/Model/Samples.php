@@ -10,7 +10,7 @@ class Samples extends Model
             'type' => 'integer',
             'unsigned' => true,
             'primary' => true,
-            'autoincrement' => true
+            'auto_increment' => true
         ],
         'pkey_2' => [
             'type' => 'integer',

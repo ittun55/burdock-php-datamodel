@@ -4,8 +4,45 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "659f82c553b30203dea49ea43c5de804",
+    "content-hash": "7c3d03401cb4c5a0831583b920bc0d9d",
     "packages": [
+        {
+            "name": "iamcal/sql-parser",
+            "version": "v0.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/iamcal/SQLParser.git",
+                "reference": "dcb614bae8151ed9db79f56cb2cf369b9749f21b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/iamcal/SQLParser/zipball/dcb614bae8151ed9db79f56cb2cf369b9749f21b",
+                "reference": "dcb614bae8151ed9db79f56cb2cf369b9749f21b",
+                "shasum": ""
+            },
+            "require-dev": {
+                "php-coveralls/php-coveralls": "~1.0",
+                "phpunit/phpunit": ">=4.8"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "iamcal\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Cal Henderson",
+                    "email": "cal@iamcal.com"
+                }
+            ],
+            "description": "MySQL schema parser",
+            "time": "2018-01-09T21:19:45+00:00"
+        },
         {
             "name": "psr/log",
             "version": "1.1.2",
