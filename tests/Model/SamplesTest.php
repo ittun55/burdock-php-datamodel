@@ -1,4 +1,6 @@
 <?php
+
+use Burdock\DataModel\Migrator;
 use Burdock\DataModel\Sql;
 use PHPUnit\Framework\TestCase;
 use Dotenv\Dotenv;
@@ -32,7 +34,7 @@ class SamplesTest extends TestCase
         // 対象テーブルの新規作成
         Samples::setPDOInstance(self::$pdo);
         $with_hidden = true;
-        $sql = Sql::getCreateTableQuery(Samples::getTableName(), Samples::getFields($with_hidden));
+        $sql = Migrator::getCreateTableQuery(Samples::getTableName(), Samples::getFields($with_hidden));
         self::$pdo->query($sql);
         self::$pdo->query('TRUNCATE TABLE ' . Samples::getTableName());
     }
@@ -169,10 +171,13 @@ class SamplesTest extends TestCase
      */
     public function test_8_findを使ったレコード取得($obj)
     {
+        $obj->id = null;
         $obj->ukey_3 = 'C1';
         Samples::insert($obj);
+        $obj->id = null;
         $obj->ukey_3 = 'C2';
         Samples::insert($obj);
+        $obj->id = null;
         $obj->ukey_3 = 'C3';
         Samples::insert($obj);
         // WHERE句指定のない find

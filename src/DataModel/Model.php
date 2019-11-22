@@ -63,6 +63,11 @@ class Model
      */
     protected static $fields = [];
 
+    public static function loadFields($fields): void
+    {
+        static::$fields = $fields;
+    }
+
     /**
      * @var string field name for soft deletion
      */
@@ -160,12 +165,12 @@ class Model
     }
 
     /**
-     * @var PDO connection objects
+     * @var PDO connection object container
      */
     protected static $_pdo_container = [];
 
     /**
-     * 接続済み (であって欲しい) PDOインスタンスを設定
+     * 接続済みPDOインスタンスを設定
      *
      * @param $pdo PDO connection object
      * @param string $name Connection name

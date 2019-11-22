@@ -24,7 +24,7 @@ class SqlTest extends TestCase
         );
         self::$pdo = new PDO($dsn, $username, $password, $options);
         $query = "select `base_table`.`id` as base_table__id, `belong_table`.`id` as belong_table__id from `base_table` join `belong_table` on `base_table`.`id` = `belong_table`.`base_table_id`";
-        //$query = "select * from `base_table` join `belong_table` on `base_table`.`id` = `belong_table`.`base_table_id`";
+      //$query = "select * from `base_table` join `belong_table` on `base_table`.`id` = `belong_table`.`base_table_id`";
         $stmt = self::$pdo->prepare($query);
         $stmt->execute();
         $stmt->setFetchMode(PDO::FETCH_ASSOC);

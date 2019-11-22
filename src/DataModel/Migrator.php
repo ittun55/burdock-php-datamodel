@@ -20,7 +20,7 @@ class Migrator
         $s = "CREATE TABLE " . Sql::wrap($table_name) . " (\n";
         $fs = [];
         foreach ($fields as $field => $attr) {
-            $f = "  " . self::Sql($field);
+            $f = "  " . Sql::wrap($field);
             if ($attr['type'] == "integer") {
                 $f.= " INT(11)";
             }
