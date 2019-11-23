@@ -111,7 +111,7 @@ class Migrator
         return $tables;
     }
 
-    public function getTableDefs(\PDO $pdo, $table_name): array
+    public static function getTableDefs(\PDO $pdo, $table_name): array
     {
         $field_types = [
             'TINYINT'  => 'integer',
