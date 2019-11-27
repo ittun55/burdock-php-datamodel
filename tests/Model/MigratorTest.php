@@ -23,7 +23,9 @@ class MigratorTest extends TestCase
 
     public function testGetCreateTableQuery()
     {
-        $this->assertFalse(true);
+        $with_hidden = true;
+        $ct = Migrator::getCreateTableQuery(Samples::getTableName(), Samples::getFields($with_hidden));
+        $this->assertNotNull($ct);
     }
 
     public function testGetTables()
@@ -42,6 +44,8 @@ class MigratorTest extends TestCase
 
     public function testGetTableDefsJson()
     {
+        $json = Migrator::getTableDefsJson(static::$pdo);
+        file_put_contents(__DIR__.'/../tmp/schemas.json', $json);
         $this->assertFalse(true);
     }
 }

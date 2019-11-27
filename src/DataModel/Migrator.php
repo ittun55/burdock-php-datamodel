@@ -21,25 +21,11 @@ class Migrator
         $fs = [];
         foreach ($fields as $field => $attr) {
             $f = "  " . Sql::wrap($field);
-            if ($attr['type'] == "integer") {
-                $f.= " INT(11)";
-            }
-            if ($attr['type'] == "string") {
-                $f.= " VARCHAR(255)";
-            }
-            if ($attr['type'] == "text") {
-                $f.= " TEXT";
-            }
-            if ($attr['type'] == "datetime") {
-                $f.= " DATETIME";
-            }
-            if ($attr['type'] == "datetime(3)") {
-                $f.= " DATETIME(3)";
-            }
+            $f.= " ${attr['type']}";
             if (array_key_exists('unsigned', $attr) && $attr['unsigned']) {
                 $f.= " UNSIGNED";
             }
-            if (array_key_exists('required', $attr) && $attr['required']) {
+            if (array_key_exists('null', $attr) && $attr['null'] === false) {
                 $f.= " NOT NULL";
             }
             if (array_key_exists('auto_increment', $attr) && $attr['auto_increment']) {
@@ -50,7 +36,9 @@ class Migrator
             }
             if (array_key_exists('default', $attr)) {
                 $f.= " DEFAULT";
-                if ($attr['type'] == "integer") {
+                if (is_null($attr['default'])) {
+                    $f.= " NULL";
+                } elseif ($attr['type'] == "integer") {
                     $f.= " {$attr['default']}";
                 } else {
                     $f.= " \"{$attr['default']}\"";
@@ -113,65 +101,13 @@ class Migrator
 
     public static function getTableDefs(\PDO $pdo, $table_name): array
     {
-        $field_types = [
-            'TINYINT'  => 'integer',
-            'INT'      => 'integer',
-            'SMALLINT' => 'integer',
-            'BIGINT'   => 'integer',
-            'CHAR'     => 'string',
-            'VARCHAR'  => 'string',
-            'TEXT'     => 'text',
-            'DATETIME' => 'datetime',
-        ];
-
-        $q = $pdo->prepare("SHOW CREATE TABLE `${table_name}`");
-        $q->execute();
-        $cts = $q->fetchAll(\PDO::FETCH_ASSOC);
-
-        $fields = [];
+        $stmt = $pdo->prepare("SHOW CREATE TABLE `${table_name}`");
+        $stmt->execute();
+        $ct = $stmt->fetch();
         $parser = new SQLParser();
-        foreach ($cts as $ct) {
-            $table = $ct['Table'];
-            $parser->parse($ct['Create Table']);
-            // フィールド定義
-            foreach ($parser->tables[$table]['fields'] as $_f) {
-                $fields[$_f['name']] = [];
-                $fields[$_f['name']]['type'] = $field_types[$_f['type']];
-                if (isset($_f['fsp']))
-                    $fields[$_f['name']]['type'].= "(${_f['fsp']})";
-                if (isset($_f['length']))
-                    $fields[$_f['name']]['length'] = $_f['length'];
-                if (isset($_f['unsigned']))
-                    $fields[$_f['name']]['unsigned'] = true;
-                if (!isset($_f['null']) || $_f['null'] === false)
-                    $fields[$_f['name']]['required'] = true;
-                if (isset($_f['auto_increment']))
-                    $fields[$_f['name']]['auto_increment'] = true;
-                if (isset($_f['default']))
-                    $fields[$_f['name']]['default'] = ($_f['default'] === 'NULL') ? null : $_f['default'];
-            }
-            // インデックス定義
-            foreach ($parser->tables[$table]['indexes'] as $idx) {
-                if ($idx['type'] === 'PRIMARY') {
-                    foreach ($idx['cols'] as $i => $col) {
-                        $fields[$col['name']]['primary'] = $i + 1;
-                    }
-                } elseif ($idx['type'] === 'UNIQUE') {
-                    foreach ($idx['cols'] as $i => $col) {
-                        $fields[$col['name']]['unique'] = [$idx['name'], $i];
-                    }
-                } elseif ($idx['type'] === 'INDEX') {
-                    foreach ($idx['cols'] as $i => $col) {
-                        $fields[$col['name']]['index'] = [$idx['name'], $i];
-                    }
-                } elseif ($idx['type'] === 'FULLTEXT') {
-                    foreach ($idx['cols'] as $i => $col) {
-                        $fields[$col['name']]['index'] = [$idx['name'], $i];
-                    }
-                }
-            }
-        }
-        return [$fields, $parser->tables[$table_name]['props']];
+        $table = $ct['Table'];
+        $parser->parse($ct['Create Table']);
+        return $parser->tables[$table];
     }
 
     public static function getTableDefsJson(\PDO $pdo): string
@@ -179,9 +115,12 @@ class Migrator
         $defs = [];
         $tables = self::getTables($pdo);
         foreach ($tables as $table) {
-            list($fields, $props) = self::getTableDefs($pdo, $table);
-            $defs[$table] = $props;
-            $defs[$table]['fields'] = $fields;
+            $defs[$table] = self::getTableDefs($pdo, $table);
+            $defs[$table]['fields'] = array_map(function($field) {
+                if (isset($field['default']) && $field['default'] === "NULL")
+                    $field['default'] = null;
+                return $field;
+            }, $defs[$table]['fields']);
         }
         return json_encode($defs, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
     }

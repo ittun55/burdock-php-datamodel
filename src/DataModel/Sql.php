@@ -91,7 +91,7 @@ class Sql
         $_fields = [];
         foreach ($fields as $field => $attr) {
             //todo: autoincrement フィールドでも値の指定があれば、その値を設定する？
-            if (array_key_exists('autoincrement', $attr) && $attr['autoincrement']) {
+            if (array_key_exists('auto_increment', $attr) && $attr['auto_increment']) {
                 continue;
             }
             //フィールドに対応する値が $data に存在しない場合、初期値があれば設定し、無ければ null を設定する

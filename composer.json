@@ -21,6 +21,7 @@
     "require": {
         "ext-pdo": "*",
         "psr/log": "^1.1",
-        "iamcal/sql-parser": "^0.2.0"
+        "iamcal/sql-parser": "^0.2.0",
+      "ext-json": "*"
     }
 }

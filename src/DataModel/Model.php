@@ -58,15 +58,16 @@ class Model
         return static::$table_name;
     }
 
+    public static function loadSchema($schemas)
+    {
+        static::$fields  = array_column($schemas[static::getTableName()]['fields'], null, 'name');
+        static::$indexes = $schemas[static::getTableName()]['indexes'];
+    }
+
     /**
      *  @var array field definitions
      */
     protected static $fields = [];
-
-    public static function loadFields($fields): void
-    {
-        static::$fields = $fields;
-    }
 
     /**
      * @var string field name for soft deletion
@@ -110,17 +111,22 @@ class Model
     }
 
     /**
+     *  @var array index definitions
+     */
+    protected static $indexes = [];
+
+    /**
      * Getting primary key field definitions
      *
      * @return array
      */
     public static function getPrimaryKeys()
     {
-        $fields = [];
-        foreach(static::$fields as $field => $setting) {
-            if (isset($setting['primary'])) $fields[] = $field;
+        foreach(static::$indexes as $index) {
+            if ($index['type'] === 'PRIMARY') {
+                return array_column($index['cols'], 'name');
+            }
         }
-        return $fields;
     }
 
     /**

@@ -143,6 +143,8 @@ class SamplesTest extends TestCase
      */
     public function test_7_レコードインサートとアップデート()
     {
+        $json = file_get_contents(__DIR__.'/../tmp/schemas.json');
+        Samples::loadSchema(json_decode($json, true));
         $b = new Samples();
         $b->pkey_2 = 100;
         $b->pkey_3 = 200;

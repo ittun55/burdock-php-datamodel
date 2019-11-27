@@ -7,66 +7,66 @@ class Samples extends Model
 
     protected static $fields = [
         'id' => [
-            'type' => 'integer',
+            'type' => 'INT(11)',
             'unsigned' => true,
             'primary' => true,
             'auto_increment' => true
         ],
         'pkey_2' => [
-            'type' => 'integer',
+            'type' => 'INT(11)',
             'primary' => true,
             'comment' => "primary が true の場合、required も true"
         ],
         'pkey_3' => [
-            'type' => 'integer',
+            'type' => 'INT(11)',
             'primary' => true,
             'default' => 0
         ],
         'ukey_1' => [
-            'type' => 'string',
+            'type' => 'VARCHAR(255)',
             'default' => 'A',
             'unique' => 'ukey_123'
         ],
         'ukey_2' => [
-            'type' => 'string',
+            'type' => 'VARCHAR(255)',
             'default' => 'B',
             'unique' => 'ukey_123'
         ],
         'ukey_3' => [
-            'type' => 'string',
+            'type' => 'VARCHAR(255)',
             'default' => 'C',
             'unique' => 'ukey_123'
         ],
         'email'  => [
-            'type' => 'string',
+            'type' => 'VARCHAR(255)',
             'required' => true
         ],
         'status' => [
-            'type' => 'string',
+            'type' => 'VARCHAR(255)',
             'index' => 'idx_status'
         ],
         'created_at' => [
-            'type' => 'datetime(3)',
+            'type' => 'DATETIME(3)',
             'required' => true
-        ], // datetime not null
+        ],
         'created_by' => [
-            'type' => 'string',
+            'type' => 'VARCHAR(255)',
             'required' => true
-        ], // varchar(255) not null
+        ],
         'updated_at' => [
-            'type' => 'datetime(3)',
+            'type' => 'DATETIME(3)',
             'required' => true
-        ], // datetime not null
+        ],
         'updated_by' => [
-            'type' => 'string',
+            'type' => 'VARCHAR(255)',
             'required' => true
-        ], // varchar(255) not null
+        ],
         'deleted_at' => [
-            'type' => 'datetime(3)'
-        ],   // datetime not null
+            'type' => 'DATETIME(3)'
+        ],
         'deleted_by' => [
-            'type' => 'string'
-        ],  // varchar(255) not null
+            'type' => 'VARCHAR(255)'
+        ],
     ];
 
     //protected static $soft_delete_field = null;
