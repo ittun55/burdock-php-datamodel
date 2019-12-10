@@ -58,16 +58,20 @@ class Model
         return static::$table_name;
     }
 
-    public static function loadSchema($schemas)
-    {
-        static::$fields  = array_column($schemas[static::getTableName()]['fields'], null, 'name');
-        static::$indexes = $schemas[static::getTableName()]['indexes'];
-    }
-
     /**
      *  @var array field definitions
      */
-    protected static $fields = [];
+    protected static $fields = null;
+
+    /**
+     * @param $schemas
+     */
+    public static function loadSchema($schemas): void
+    {
+        if (!is_null(static::$fields)) return;
+        static::$fields  = array_column($schemas[static::getTableName()]['fields'], null, 'name');
+        static::$indexes = $schemas[static::getTableName()]['indexes'];
+    }
 
     /**
      * @var string field name for soft deletion

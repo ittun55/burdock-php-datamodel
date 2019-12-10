@@ -10,3 +10,4 @@ config.ini
 /.vscode/
 /vendor/
 /*_test.sh
+/.php_cs.cache
