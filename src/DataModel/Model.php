@@ -8,7 +8,6 @@ use Psr\Log\NullLogger;
 use Psr\Log\LoggerInterface;
 use InvalidArgumentException;
 
-//Todo: 論理削除フィールド（論理削除を使うかどうかのフラグ）
 //Todo: 物理削除をどう実装するか？
 //Todo: 各フィールドの型が合っているか、チェックする実装を入れるか？
 //Todo: 保存前のバリデーションとエラーメッセージをどう実装するか？
@@ -478,7 +477,9 @@ class Model
         $item_limit  = (int)$params[Sql::LIMIT];
         $total_pages = (int)ceil($total_items / (int)$item_limit);
 
-        if ($current_page > $total_pages)
+        if ($total_pages == 0)
+            $current_page = 1;
+        else if ($current_page > $total_pages)
             $current_page = $total_pages;
 
         $params[Sql::OFFSET] = ($current_page - 1) * (int)$params[Sql::LIMIT];
