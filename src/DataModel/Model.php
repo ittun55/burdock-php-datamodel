@@ -514,7 +514,8 @@ class Model
             Sql::SELECT => self::getFieldNames(),
             Sql::WHERE  => $where
         ];
-        $fetch_mode = isset($opt[static::FETCH_MODE]) ? $opts[static::FETCH_MODE] : PDO::FETCH_CLASS;
+
+        $fetch_mode = isset($opts[static::FETCH_MODE]) ? $opts[static::FETCH_MODE] : PDO::FETCH_CLASS;
 
         $results = self::find($params, [static::FETCH_MODE => $fetch_mode]);
         if (count($results) > 1) {
