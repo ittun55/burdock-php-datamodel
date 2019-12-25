@@ -499,6 +499,7 @@ class Model
      * @param null $opts オプション
      *     static::WITH_HIDDEN  => false|true,
      *     static::WITH_DELETED => false|true,
+     *     static::FETCH_MODE   => PDO::FETCH_FUNC | PDO::FETCH_ASSOC | PDO::FETCH_CLASS,
      * @return Model|null
      * @throws Exception
      */
@@ -513,7 +514,9 @@ class Model
             Sql::SELECT => self::getFieldNames(),
             Sql::WHERE  => $where
         ];
-        $results = self::find($params, [static::FETCH_MODE => PDO::FETCH_CLASS]);
+        $fetch_mode = isset($opt[static::FETCH_MODE]) ? $opts[static::FETCH_MODE] : PDO::FETCH_CLASS;
+
+        $results = self::find($params, [static::FETCH_MODE => $fetch_mode]);
         if (count($results) > 1) {
             throw new Exception();
         }
