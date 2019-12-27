@@ -11,7 +11,6 @@ use InvalidArgumentException;
 //Todo: 物理削除をどう実装するか？
 //Todo: 各フィールドの型が合っているか、チェックする実装を入れるか？
 //Todo: 保存前のバリデーションとエラーメッセージをどう実装するか？
-//Todo: 発行したクエリをログとして参照したい
 
 /**
  * Class Model
@@ -357,31 +356,33 @@ class Model
     const WITH_HIDDEN  = 'with_hidden';
     const WITH_DELETED = 'with_deleted';
     const FETCH_MODE   = 'fetch_mode';
+    const FOR_UPDATE   = 'for_update';
     /**
      * @param $params array 検索条件となるパラメータ連想配列
      * [
-     *     self::SELECT => [], // 指定が有る場合は、モデルインスタンスではなく配列を返す
-     *     self::JOIN   => [], // 指定が有る場合は、モデルインスタンスではなく配列を返す
-     *     self::WHERE  => [
-     *         self::OP_OR => [
+     *     Sql::SELECT => [], // 指定が有る場合は、モデルインスタンスではなく配列を返す
+     *     Sql::JOIN   => [], // 指定が有る場合は、モデルインスタンスではなく配列を返す
+     *     Sql::WHERE  => [
+     *         Sql::OP_OR => [
      *             ['field1' => 'value1'], // 省略時は self::OP_EQ
-     *             ['field2' => [self::OP_NE => 'value2']],
-     *             [self::OP_AND => [
-     *                 ['field3' => [self::OP_GE => 'value3']],
-     *                 ['field4' => [self::OP_LT => 'value4']]
+     *             ['field2' => [Sql::OP_NE => 'value2']],
+     *             [Sql::OP_AND => [
+     *                 ['field3' => [Sql::OP_GE => 'value3']],
+     *                 ['field4' => [Sql::OP_LT => 'value4']]
      *             ],
      *         ]
      *     ],
-     *     self::ORDER_BY => [],
-     *     self::LIMIT => M, // 数値
-     *     self::OFFSET => N, // 数値
-     *     self::FOR_UPDATE => false / true
+     *     Sql::ORDER_BY => [],
+     *     Sql::LIMIT => M, // 数値
+     *     Sql::OFFSET => N, // 数値
+     *     Sql::FOR_UPDATE => false / true
      * ]
      * @param $opts array オプション
      * [
      *     static::WITH_HIDDEN  => false|true,
      *     static::WITH_DELETED => false|true,
      *     static::FETCH_MODE   => PDO::FETCH_FUNC | PDO::FETCH_ASSOC | PDO::FETCH_CLASS,
+     *     static::FOR_UPODATE  => false|true
      * ]
      * @return array
      * @throws Exception
@@ -400,6 +401,9 @@ class Model
         }
         if (!isset($params[Sql::ORDER_BY])) {
             $params[Sql::ORDER_BY] = static::getPrimaryKeys();
+        }
+        if (isset($opts[static::FOR_UPDATE]) && $opts[static::FOR_UPDATE] === true) {
+            $params[Sql::FOR_UPDATE] = true;
         }
 
         list($sql, $bind) = Sql::buildQuery($params);
@@ -497,6 +501,7 @@ class Model
      *
      * @param $data array この場合、引数に指定できるデータは、プライマリキーと値の連想配列、クラスインスタンスのどちらか
      * @param null $opts オプション
+     *     static::FOR_UPDATE   => false|true,
      *     static::WITH_HIDDEN  => false|true,
      *     static::WITH_DELETED => false|true,
      *     static::FETCH_MODE   => PDO::FETCH_FUNC | PDO::FETCH_ASSOC | PDO::FETCH_CLASS,
@@ -514,6 +519,10 @@ class Model
             Sql::SELECT => self::getFieldNames(),
             Sql::WHERE  => $where
         ];
+
+        if (isset($opts[static::FOR_UPDATE]) && $opts[static::FOR_UPDATE] === true) {
+            $params[Sql::FOR_UPDATE] = true;
+        }
 
         $fetch_mode = isset($opts[static::FETCH_MODE]) ? $opts[static::FETCH_MODE] : PDO::FETCH_CLASS;
 
