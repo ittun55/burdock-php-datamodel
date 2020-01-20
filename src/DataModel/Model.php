@@ -343,6 +343,16 @@ class Model
     }
 
     /**
+     * インスタンスに含まれるデータを連想配列で返す
+     *
+     * @return array
+     */
+    public function getData()
+    {
+        return $this->_data;
+    }
+
+    /**
      * クラスに指定されたフィールドが見つからない場合のメッセージを作成
      *
      * @param $key string   "見つからなかったフィールド名"
