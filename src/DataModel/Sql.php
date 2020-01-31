@@ -9,6 +9,8 @@ class Sql
     const SELECT = 'select';
     const FROM   = 'from';
     const JOIN   = 'join';
+    const INNER  = 'inner';
+    const OUTER  = 'outer';
     const WHERE  = 'where';
     const AND = 'and';
     const OR  = 'or';
