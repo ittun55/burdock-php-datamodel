@@ -450,11 +450,14 @@ class Model
      */
     public static function count(array $params=[], ?array $opts=null): int
     {
-        $params[Sql::FROM] = static::getTableName();
+        $params[Sql::FROM] = isset($params[Sql::FROM]) ? $params[Sql::FROM] : static::getTableName();
 
         if (!isset($opts[static::WITH_DELETED]) && static::$soft_delete_field) {
             $where = isset($params[Sql::WHERE]) ? $params[Sql::WHERE] : [];
-            $params[Sql::WHERE] = Sql::addWhere([self::$soft_delete_field => null], $where);
+            $soft_delete_field = (is_array($params[Sql::FROM]))
+                ? $params[Sql::FROM][1].'.'.self::$soft_delete_field
+                : self::$soft_delete_field;
+            $params[Sql::WHERE] = Sql::addWhere([$soft_delete_field => null], $where);
         }
 
         list($sql, $bind) = Sql::buildCountQuery($params);
