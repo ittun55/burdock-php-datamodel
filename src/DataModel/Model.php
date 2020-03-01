@@ -399,7 +399,7 @@ class Model
      */
     public static function find(array $params=[], ?array $opts=null)
     {
-        $params[Sql::FROM] = static::getTableName();
+        $params[Sql::FROM] = isset($params[Sql::FROM]) ? $params[Sql::FROM] : static::getTableName();
 
         if (!isset($params[Sql::SELECT])) {
             $with_hidden = isset($opts[static::WITH_HIDDEN]) ? true : false;
@@ -407,10 +407,21 @@ class Model
         }
         if (!isset($opts[static::WITH_DELETED]) && static::$soft_delete_field) {
             $where = isset($params[Sql::WHERE]) ? $params[Sql::WHERE] : [];
-            $params[Sql::WHERE] = Sql::addWhere([self::$soft_delete_field => null], $where);
+            $soft_delete_field = (is_array($params[Sql::FROM]))
+                ? $params[Sql::FROM][1].'.'.self::$soft_delete_field
+                : self::$soft_delete_field;
+            $params[Sql::WHERE] = Sql::addWhere([$soft_delete_field => null], $where);
         }
         if (!isset($params[Sql::ORDER_BY])) {
-            $params[Sql::ORDER_BY] = static::getPrimaryKeys();
+            if (is_array($params[Sql::FROM])) {
+                $alias = $params[Sql::FROM][1];
+                $p_keys = array_map(function($item) use ($alias) {
+                    return $alias.'.'.$item;
+                }, static::getPrimaryKeys());
+            } else {
+                $p_keys = static::getPrimaryKeys();
+            }
+            $params[Sql::ORDER_BY] = $p_keys;
         }
         if (isset($opts[static::FOR_UPDATE]) && $opts[static::FOR_UPDATE] === true) {
             $params[Sql::FOR_UPDATE] = true;
