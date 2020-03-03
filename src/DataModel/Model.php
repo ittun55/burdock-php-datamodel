@@ -144,8 +144,8 @@ class Model
     /**
      * Save original value if modified
      *
-     * @param string $field
-     * @param $value
+     * @param string $field フィールド名
+     * @param mixed $value 更新前の値
      */
     protected function setDirtyField(string $field, $value): void
     {
@@ -157,7 +157,7 @@ class Model
     /**
      * If the record has been modified or not
      *
-     * @param null $fields
+     * @param array | null $fields
      * @return bool
      */
     public function isDirty($fields=null): bool
@@ -286,7 +286,12 @@ class Model
     public function set($key, $value)
     {
         if (array_key_exists($key, static::$fields) || $this->_isPrivate($key)) {
-            $this->setDirtyField($key, $value);
+            if (array_key_exists($key, $this->_data) && $this->_data[$key] != $value) {
+                // 既に値をセットしたことがあり （初回DBデータロード時）、
+                // これからセットする値がそれと異なっていれば dirty とする
+                // insert の場合は初回DBデータロードと同じ扱いになってしまうため dirty 判定できない.
+                $this->setDirtyField($key, $this->_data[$key]);
+            }
             $this->_data[$key] = $value;
             return;
         }
@@ -598,8 +603,11 @@ class Model
     public function update()
     {
         $logger = static::getLogger();
-        $dt = self::getMsecDate();
-        $this->updated_at = $dt;
+        // 手動で更新日時をセットされた場合は、その値で更新する
+        if (!$this->isDirty(['updated_at'])) {
+            $dt = self::getMsecDate();
+            $this->updated_at = $dt;
+        }
         list($sql, $ctx) = Sql::buildUpdateQuery(static::getTableName(), static::$fields, static::getPrimaryKeys(), $this->_data);
         $logger->debug($sql);
         $logger->debug(var_export($ctx, true));

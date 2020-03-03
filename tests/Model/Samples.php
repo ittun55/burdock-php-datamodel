@@ -72,3 +72,4 @@ class Samples extends Model
     //protected static $soft_delete_field = null;
     protected static $soft_delete_field = 'deleted_at';
 }
+Samples::loadSchema(__DIR__.'/../tmp/schema.json');
