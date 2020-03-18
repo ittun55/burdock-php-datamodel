@@ -373,7 +373,7 @@ class Model
     const FETCH_MODE   = 'fetch_mode';
     const FOR_UPDATE   = 'for_update';
     /**
-     * @param $params array 検索条件となるパラメータ連想配列
+     * @param array $params 検索条件となるパラメータ連想配列
      * [
      *     Sql::SELECT => [], // 指定が有る場合は、モデルインスタンスではなく配列を返す
      *     Sql::JOIN   => [], // 指定が有る場合は、モデルインスタンスではなく配列を返す
@@ -392,17 +392,18 @@ class Model
      *     Sql::OFFSET => N, // 数値
      *     Sql::FOR_UPDATE => false / true
      * ]
-     * @param $opts array オプション
+     * @param array|null $opts オプション
      * [
      *     static::WITH_HIDDEN  => false|true,
      *     static::WITH_DELETED => false|true,
      *     static::FETCH_MODE   => PDO::FETCH_FUNC | PDO::FETCH_ASSOC | PDO::FETCH_CLASS,
      *     static::FOR_UPODATE  => false|true
      * ]
+     * @param PDO|null $pdo PDOインスタンス
      * @return array
      * @throws Exception
      */
-    public static function find(array $params=[], ?array $opts=null)
+    public static function find(array $params=[], ?array $opts=null, ?PDO $pdo=null)
     {
         $params[Sql::FROM] = isset($params[Sql::FROM]) ? $params[Sql::FROM] : static::getTableName();
 
@@ -436,7 +437,7 @@ class Model
         $logger = static::getLogger();
         $logger->debug($sql);
         $logger->debug(var_export($bind, true));
-        $stmt = self::execute($sql, $bind);
+        $stmt = self::execute($sql, $bind, $pdo);
         $fetch_mode = isset($opts[static::FETCH_MODE]) ? $opts[static::FETCH_MODE] : PDO::FETCH_ASSOC;
         if ($fetch_mode == PDO::FETCH_CLASS) {
             return $stmt->fetchAll(PDO::FETCH_CLASS, static::class);
@@ -450,10 +451,11 @@ class Model
      *
      * @param array $params
      * @param array|null $opts
+     * @param PDO|null $pdo
      * @return mixed
      * @throws Exception
      */
-    public static function count(array $params=[], ?array $opts=null): int
+    public static function count(array $params=[], ?array $opts=null, ?PDO $pdo=null): int
     {
         $params[Sql::FROM] = isset($params[Sql::FROM]) ? $params[Sql::FROM] : static::getTableName();
 
@@ -475,13 +477,14 @@ class Model
     /**
      * @param $sql
      * @param $bind
+     * @param PDO|null $pdo
      * @return PDOStatement
      * @throws Exception
      */
-    public static function execute($sql, $bind): PDOStatement
+    public static function execute($sql, $bind, PDO $pdo=null): PDOStatement
     {
-        $pdo  = self::getPDOInstance();
-        $stmt = $pdo->prepare($sql);
+        $_pdo  = is_null($pdo) ? self::getPDOInstance() : $pdo;
+        $stmt = $_pdo->prepare($sql);
         if (!$stmt->execute($bind)) {
             $msg = 'SELECT Query was failed : ' . $sql . PHP_EOL;
             $msg.= '  ERROR CODE : ' . $stmt->errorCode();
@@ -534,10 +537,11 @@ class Model
      *     static::WITH_HIDDEN  => false|true,
      *     static::WITH_DELETED => false|true,
      *     static::FETCH_MODE   => PDO::FETCH_FUNC | PDO::FETCH_ASSOC | PDO::FETCH_CLASS,
+     * @param PDO|null $pdo
      * @return Model|null
      * @throws Exception
      */
-    public static function findById($data, $opts=null)
+    public static function findById($data, $opts=null, ?PDO $pdo=null)
     {
         $where = Sql::getPrimaryKeyConditions(static::getPrimaryKeys(), $data);
         if (!isset($opts[static::WITH_DELETED])) {
@@ -555,7 +559,43 @@ class Model
 
         $fetch_mode = isset($opts[static::FETCH_MODE]) ? $opts[static::FETCH_MODE] : PDO::FETCH_CLASS;
 
-        $results = self::find($params, [static::FETCH_MODE => $fetch_mode]);
+        $results = self::find($params, [static::FETCH_MODE => $fetch_mode], $pdo);
+        if (count($results) > 1) {
+            throw new Exception();
+        }
+        return (count($results) == 1) ? $results[0] : null;
+    }
+
+    /**
+     * @param array $params
+     * @param array|null $opts
+     * @param PDO|null $pdo
+     * @return mixed|null
+     * @throws Exception
+     */
+    public static function findOne(array $params, ?array $opts=null, ?PDO $pdo=null)
+    {
+        $conditions = [];
+        foreach($params as $field => $value) {
+            $conditions[] = [$field => [Sql::EQ => $value]];
+        }
+        $where = (count($conditions) > 1) ? [Sql::AND => $conditions] : $conditions[0];
+        if (!isset($opts[static::WITH_DELETED])) {
+            $params[Sql::WHERE] = Sql::addWhere(['deleted_at' => null], $where);
+        }
+
+        $params = [
+            Sql::SELECT => self::getFieldNames(),
+            Sql::WHERE  => $where
+        ];
+
+        if (isset($opts[static::FOR_UPDATE]) && $opts[static::FOR_UPDATE] === true) {
+            $params[Sql::FOR_UPDATE] = true;
+        }
+
+        $fetch_mode = isset($opts[static::FETCH_MODE]) ? $opts[static::FETCH_MODE] : PDO::FETCH_CLASS;
+
+        $results = self::find($params, [static::FETCH_MODE => $fetch_mode], $pdo);
         if (count($results) > 1) {
             throw new Exception();
         }
@@ -597,10 +637,11 @@ class Model
     /**
      * インスタンス自身のプライマリキーを指定して UPDATE を実行する
      *
+     * @param PDO|null $pdo
      * @return $this
      * @throws Exception
      */
-    public function update()
+    public function update(?PDO $pdo=null)
     {
         $logger = static::getLogger();
         // 手動で更新日時をセットされた場合は、その値で更新する
@@ -611,8 +652,8 @@ class Model
         list($sql, $ctx) = Sql::buildUpdateQuery(static::getTableName(), static::$fields, static::getPrimaryKeys(), $this->_data);
         $logger->debug($sql);
         $logger->debug(var_export($ctx, true));
-        $pdo = self::getPDOInstance();
-        $stmt = $pdo->prepare($sql);
+        $_pdo = is_null($pdo) ? self::getPDOInstance() : $pdo;
+        $stmt = $_pdo->prepare($sql);
         if (!$stmt->execute($ctx)) {
             $logger = static::getLogger();
             $logger->error($stmt->errorCode());
