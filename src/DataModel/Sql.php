@@ -157,6 +157,26 @@ class Sql
     }
 
     /**
+     * @param string $table_name
+     * @param array $primary_keys
+     * @param array $data
+     * @return array
+     * @throws Exception
+     */
+    public static function buildDeleteQuery(string $table_name, array $primary_keys, array $data): array
+    {
+        $ctx = []; // バインド連想配列
+
+        // primary_key フィールドによる WHERE句の生成
+        $w_params = [Sql::WHERE => Sql::getPrimaryKeyConditions($primary_keys, $data)];
+        list($where, $ctx) = self::getWhereClause($w_params, $ctx);
+
+        // プリペアードステートメントの生成と値のバインド
+        $sql = 'DELETE FROM ' . $table_name . $where;
+        return [$sql, $ctx];
+    }
+
+    /**
      * プライマリキーを指定した WHERE句を生成する
      *
      * @param array $primary_keys plain array

@@ -339,4 +339,14 @@ class SqlTest extends TestCase
         $expected.= ' WHERE (`field1` = :field1__1 OR `field2` <> :field2__2 OR (`field3` >= :field3__3 AND `field4` < :field4__4))';
         $this->assertEquals($expected, $sql);
     }
+
+    public function test_buildDeleteQuery()
+    {
+        list($sql, $bind) = Sql::buildDeleteQuery('TEST_TABLE', ['k1', 'k2', 'k3'], ['k1'=>3, 'k2'=>2, 'k3'=>1]);
+        $expected = 'DELETE FROM TEST_TABLE WHERE (`k1` = :k1__0 AND `k2` = :k2__1 AND `k3` = :k3__2)';
+        $this->assertEquals($expected, $sql);
+        $this->assertEquals(3, $bind[':k1__0']);
+        $this->assertEquals(2, $bind[':k2__1']);
+        $this->assertEquals(1, $bind[':k3__2']);
+    }
 }

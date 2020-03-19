@@ -662,4 +662,36 @@ class Model
         }
         return $this;
     }
+
+    /**
+     * インスタンス自身のプライマリキーを指定して DELETE または SOFT DELETE を実行する
+     *
+     * @param bool|null $hard
+     * @param PDO|null $pdo
+     * @return $this
+     * @throws Exception
+     */
+    public function delete(?bool $hard=false, ?PDO $pdo=null)
+    {
+        $logger = static::getLogger();
+        if ($hard) {
+            list($sql, $ctx) = Sql::buildDeleteQuery(static::getTableName(), static::getPrimaryKeys(), $this->_data);
+        } else {
+            $dt = self::getMsecDate();
+            $this->deleted_at = $dt;
+            list($sql, $ctx) = Sql::buildUpdateQuery(static::getTableName(), static::$fields, static::getPrimaryKeys(), $this->_data);
+        }
+
+        $logger->debug($sql);
+        $logger->debug(var_export($ctx, true));
+        $_pdo = is_null($pdo) ? self::getPDOInstance() : $pdo;
+        $stmt = $_pdo->prepare($sql);
+        if (!$stmt->execute($ctx)) {
+            $logger = static::getLogger();
+            $logger->error($stmt->errorCode());
+            $logger->error(var_export($stmt->errorInfo(), true));
+            throw new Exception('DELETE Query was failed : '.$sql);
+        }
+        return $this;
+    }
 }
