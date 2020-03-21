@@ -674,7 +674,7 @@ class Model
     public function delete(?bool $hard=false, ?PDO $pdo=null)
     {
         $logger = static::getLogger();
-        if ($hard) {
+        if ($hard || !self::$soft_delete_field) {
             list($sql, $ctx) = Sql::buildDeleteQuery(static::getTableName(), static::getPrimaryKeys(), $this->_data);
         } else {
             $dt = self::getMsecDate();
