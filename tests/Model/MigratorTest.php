@@ -3,6 +3,8 @@ use Burdock\DataModel\Migrator;
 use Dotenv\Dotenv;
 use PHPUnit\Framework\TestCase;
 
+require(__DIR__.'/Samples.php');
+
 class MigratorTest extends TestCase
 {
     private static $pdo = null;

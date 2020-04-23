@@ -3,6 +3,7 @@ namespace Burdock\DataModel;
 
 use Exception;
 use \InvalidArgumentException;
+use phpDocumentor\Reflection\Types\String_;
 
 class Sql
 {
@@ -52,9 +53,10 @@ class Sql
         self::FM, self::NF, self::PM, self::NP,
         self::IN, self::NI, self::BW,
     ];
-    const ORDER_BY  = 'order_by';
-    const ASC  = 'ASC';
-    const DESC = 'DESC';
+    const ORDER_BY = 'order_by';
+    const GROUP_BY = 'group_by';
+    const ASC   = 'ASC';
+    const DESC  = 'DESC';
     const SORTS = [
         self::ASC,
         self::DESC
@@ -364,6 +366,25 @@ class Sql
         return [$where, $bind];
     }
 
+    public static function getGroupByClause(array $params): String
+    {
+        if (empty($params[Sql::GROUP_BY])) return '';
+        if (is_string($params[Sql::GROUP_BY]))
+            return ' GROPU BY ' . $params[Sql::GROUP_BY];
+        if (is_array($params[Sql::GROUP_BY]) && count($params[Sql::GROUP_BY]) > 0) {
+            $group_by = '';
+            foreach ($params[Sql::GROUP_BY] as $gb) {
+                if ($group_by === '')
+                    $group_by = ' GROUP BY ' . $gb;
+                else
+                    $group_by.= ', ' . $gb;
+            }
+            return $group_by;
+        } else {
+            return '';
+        }
+    }
+
     /**
      * SELECT文を生成する.
      *
@@ -380,6 +401,7 @@ class Sql
         $sql.= $join;
         list($where, $bind) = self::getWhereClause($params, $bind);
         $sql.= $where;
+        $sql.= self::getGroupByClause($params);
         $sql.= self::getOrderByClause($params);
         $sql.= self::getLimitClause($params);
         $sql.= self::getOffsetClause($params);
