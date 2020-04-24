@@ -109,7 +109,7 @@ class Sql
                 $msg = 'Field: ' . $field . 'value is required for insert query．';
                 throw new InvalidArgumentException($msg);
             }
-            $_fields[] = $field;
+            $_fields[] = self::wrap($field);
             if ($phd != '') {
                 $phd.= ', ';
             }
@@ -145,7 +145,7 @@ class Sql
             if ($phd != '') {
                 $phd .= ', ';
             }
-            $phd .= $field . ' = :' . $field;
+            $phd .= self::wrap($field) . ' = :' . $field;
             $ctx[':' . $field] = $data[$field];
         }
 
