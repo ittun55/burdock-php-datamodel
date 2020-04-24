@@ -370,14 +370,14 @@ class Sql
     {
         if (empty($params[Sql::GROUP_BY])) return '';
         if (is_string($params[Sql::GROUP_BY]))
-            return ' GROPU BY ' . $params[Sql::GROUP_BY];
+            return ' GROPU BY ' . self::wrap($params[Sql::GROUP_BY]);
         if (is_array($params[Sql::GROUP_BY]) && count($params[Sql::GROUP_BY]) > 0) {
             $group_by = '';
-            foreach ($params[Sql::GROUP_BY] as $gb) {
+            foreach ($params[Sql::GROUP_BY] as $field) {
                 if ($group_by === '')
-                    $group_by = ' GROUP BY ' . $gb;
+                    $group_by = ' GROUP BY ' . self::wrap($field);
                 else
-                    $group_by.= ', ' . $gb;
+                    $group_by.= ', ' . self::wrap($field);
             }
             return $group_by;
         } else {
@@ -552,7 +552,7 @@ class Sql
         $_orders = [];
         foreach($params[Sql::ORDER_BY] as $item) {
             if (!is_string($item)) {
-                $msg = 'ORDER BY field item should have at least 2 elements';
+                $msg = 'ORDER BY each element should be a string.';
                 throw new InvalidArgumentException($msg);
             }
             list($fld, $dct) = array_merge(explode(' ', $item), [null]);

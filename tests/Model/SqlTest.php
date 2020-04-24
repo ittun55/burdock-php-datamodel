@@ -262,7 +262,7 @@ class SqlTest extends TestCase
             Sql::GROUP_BY => ['tbl_a.tbl_a', 'tbl_b.tbl_b']
         ];
         $gb = Sql::getGroupByClause($params);
-        $this->assertEquals(' GROUP BY tbl_a.tbl_a, tbl_b.tbl_b', $gb);
+        $this->assertEquals(' GROUP BY `tbl_a`.`tbl_a`, `tbl_b`.`tbl_b`', $gb);
     }
 
     public function test_buildQuery()
