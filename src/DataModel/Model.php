@@ -328,9 +328,8 @@ class Model
      */
     public static function convertData($data)
     {
-        if (is_null($data)) {
-            return $data;
-        }
+        if (is_null($data)) return $data;
+
         $arr = null;
         if ($data instanceof static) {
             $arr = $data->_data;
@@ -339,11 +338,13 @@ class Model
         } else {
             $arr = $data;
         }
+
         if (is_array($arr)) {
             foreach ($arr as $k1 => $v1) {
                 $arr[$k1] = self::convertData($v1);
             }
         }
+
         return $arr;
     }
 
@@ -408,7 +409,7 @@ class Model
         $params[Sql::FROM] = isset($params[Sql::FROM]) ? $params[Sql::FROM] : static::getTableName();
 
         if (!isset($params[Sql::SELECT])) {
-            $with_hidden = isset($opts[static::WITH_HIDDEN]) ? true : false;
+            $with_hidden = isset($opts[static::WITH_HIDDEN]);
             $params[Sql::SELECT] = static::getFieldNames($with_hidden);
         }
         if (!isset($opts[static::WITH_DELETED]) && static::$soft_delete_field) {
@@ -613,25 +614,25 @@ class Model
      * @return mixed
      * @throws Exception
      */
-    public static function insert($data, $ignore=false)
+    public function insert(?PDO $pdo=null, $ignore=false)
     {
         $logger = static::getLogger();
-        $me = ($data instanceof static) ? $data : new static($data);
         $dt = self::getMsecDate();
-        $me->created_at = $dt;
-        $me->updated_at = $dt;
-        list($sql, $ctx) = Sql::buildInsertQuery(static::getTableName(), static::$fields, $me->_data, $ignore);
+        $this->created_at = $dt;
+        $this->updated_at = $dt;
+        static::_validate('insert', $this->getData());
+        list($sql, $ctx) = Sql::buildInsertQuery(static::getTableName(), static::$fields, $this->getData(), $ignore);
         $logger->debug($sql);
         $logger->debug(var_export($ctx, true));
-        $pdo = self::getPDOInstance();
-        $stmt = $pdo->prepare($sql);
+        $_pdo = is_null($pdo) ? self::getPDOInstance() : $pdo;
+        $stmt = $_pdo->prepare($sql);
         if (!$stmt->execute($ctx)) {
             $logger->error($stmt->errorCode());
             $logger->error(var_export($stmt->errorInfo(), true));
             throw new Exception('INSERT Query was failed : '.$sql);
         }
-        $me->id = $pdo->lastInsertId();
-        return $me;
+        $this->id = $_pdo->lastInsertId();
+        return $this;
     }
 
     /**
@@ -644,11 +645,12 @@ class Model
     public function update(?PDO $pdo=null)
     {
         $logger = static::getLogger();
-        // 手動で更新日時をセットされた場合は、その値で更新する
+        // 手動で更新日時をセットされている場合は、その値で更新する
         if (!$this->isDirty(['updated_at'])) {
             $dt = self::getMsecDate();
             $this->updated_at = $dt;
         }
+        $this->_validate('update', $this->getData());
         list($sql, $ctx) = Sql::buildUpdateQuery(static::getTableName(), static::$fields, static::getPrimaryKeys(), $this->_data);
         $logger->debug($sql);
         $logger->debug(var_export($ctx, true));
@@ -662,6 +664,25 @@ class Model
         }
         return $this;
     }
+
+    /**
+     * @param string $method
+     * @param array $data
+     * @throws DuplicatedPrimaryKeyException
+     * @throws DuplicatedUniqueIndexException
+     */
+    public static function _validate(string $method, array $data)
+    {
+        list($is_valid, $errors) = self::validatePrimaryKeyIndex($method, $data);
+        if (!$is_valid)
+            throw new DuplicatedPrimaryKeyException('');
+        list($is_valid, $errors) = self::validateUniqueIndexes($method, $data);
+        if (!$is_valid)
+            throw new DuplicatedUniqueIndexException('', 0, null, $errors);
+        static::validate();
+    }
+
+    public static function validate() {}
 
     /**
      * インスタンス自身のプライマリキーを指定して DELETE または SOFT DELETE を実行する
@@ -693,5 +714,142 @@ class Model
             throw new Exception('DELETE Query was failed : '.$sql);
         }
         return $this;
+    }
+
+
+    public static function validatePrimaryKeyIndex(string $method, array $data): array
+    {
+        $fields = static::getPrimaryKeyFields();
+        $results = static::getExistingPrimaryKeyIndexData($fields, $data);
+        $errors  = [];
+        foreach($results as $name => $rows) {
+            if (count($rows) === 0) {
+                continue;
+            } else if ($method === 'insert' && count($rows) > 0) {
+                $errors['PRIMARY'] = $fields; // 重複データあり
+            } else if ($method === 'update' && count($rows) === 1) {
+                $pks = static::getPrimaryKeys();
+                foreach($pks as $key) {
+                    if (isset(static::$fields[$key]['auto_increment'])) continue;
+                    if ($rows[0][$key] !== $data[$key]) {
+                        $errors['PRIMARY'] = $fields;
+                        break;
+                    }
+                }
+            }
+        }
+        return [(count(array_keys($errors)) === 0), $errors];
+    }
+
+    /**
+     * @return array
+     */
+    public static function getPrimaryKeyFields(): array
+    {
+        $cols = [];
+        foreach(static::$indexes as $index) {
+            if ($index['type'] !== 'PRIMARY') continue;
+            foreach($index['cols'] as $col) {
+                $cols[] = $col['name'];
+            }
+            break;
+        }
+        return $cols;
+    }
+
+    /**
+     * @param array $fields
+     * @param array $data
+     * @return array
+     * @throws NullPrimaryKeyException
+     */
+    public static function getExistingPrimaryKeyIndexData(Array $fields, Array $data): array
+    {
+        $conditions = [];
+        foreach($fields as $field) {
+            if (isset(static::$fields[$field]['auto_increment']))
+                return [];
+            if (!isset($data[$field])) {
+                $msg = "${field} of primary key should be not null";
+                throw new NullPrimaryKeyException($msg);
+            }
+            $conditions[] = [$field => $data[$field]];
+        }
+        if (count($conditions) > 1) $conditions = [Sql::AND => $conditions];
+        return static::find([ Sql::WHERE => $conditions ]);
+    }
+
+    public static function validateUniqueIndexes(string $method, array $data): array
+    {
+        $indexes = static::getUniqueIndexes();
+        $results = static::getExistingUniqueIndexData($indexes, $data);
+        $errors  = [];
+        foreach($results as $name => $rows) {
+            if (count($rows) === 0) {
+                continue;
+            } else if ($method === 'insert' && count($rows) > 0) {
+                $errors[$name] = $indexes[$name]; // 重複データあり
+            } else if ($method === 'update' && count($rows) === 1) {
+                $pks = static::getPrimaryKeys();
+                foreach($pks as $key) {
+                    if ($rows[0][$key] !== $data[$key]) {
+                        $errors[$name] = $indexes[$name]; // 重複データあり
+                        continue;
+                    }
+                }
+            }
+        }
+        return [(count(array_keys($errors)) === 0), $errors];
+    }
+
+    /**
+     * @return array
+     */
+    public static function getUniqueIndexes(): array
+    {
+        $indexes = [];
+        foreach(static::$indexes as $index) {
+            if ($index['type'] !== 'UNIQUE') continue;
+            $cols = [];
+            foreach($index['cols'] as $col) {
+                $cols[] = $col['name'];
+            }
+            $indexes[$index['name']] = $cols;
+        }
+        return $indexes;
+    }
+
+    /**
+     * @param array $indexes
+     * @param array $data
+     * @return array
+     * @throws Exception
+     */
+    public static function getExistingUniqueIndexData(array $indexes, array $data): array
+    {
+        $results = [];
+        foreach($indexes as $name => $fields) {
+            $conditions = [];
+            foreach($fields as $field) {
+                if (!isset($data[$field])) {
+                    if (isset(static::$fields[$field]['default'])) {
+                        if (is_null(static::$fields[$field]['default'])) {
+                            $conditions = [];
+                            break;
+                        }
+                        $conditions[] = [$field => static::$fields[$field]['default']];
+                    } else {
+                        $conditions = [];
+                        break;
+                    }
+                } else {
+                    $conditions[] = [$field => $data[$field]];
+                }
+            }
+            if (count($conditions) !== count($fields)) continue;
+            if (count($conditions) > 1) $conditions = [Sql::AND => $conditions];
+            $results[$name] = static::find([ Sql::WHERE => $conditions ]);
+        }
+        return $results;
     }
 }

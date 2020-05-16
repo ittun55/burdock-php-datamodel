@@ -1,6 +1,7 @@
 <?php
 
 use Burdock\DataModel\Migrator;
+use Burdock\DataModel\Model;
 use Burdock\DataModel\Sql;
 use PHPUnit\Framework\TestCase;
 use Dotenv\Dotenv;
@@ -36,8 +37,8 @@ class SamplesTest extends TestCase
         // $with_hidden = true;
         // $sql = Migrator::getCreateTableQuery(Samples::getTableName(), Samples::getFields($with_hidden));
         // self::$pdo->query($sql);
-        // self::$pdo->query('TRUNCATE TABLE ' . Samples::getTableName());
-        Samples::setPDOInstance(self::$pdo);
+        self::$pdo->query('TRUNCATE TABLE ' . Samples::getTableName());
+        Model::setPDOInstance(self::$pdo);
     }
 
     public static function tearDownAfterClass(): void
@@ -56,7 +57,7 @@ class SamplesTest extends TestCase
     {
         $logger = new Logger('DataModelTest');
         $logger->pushHandler(new StreamHandler('php://stderr', Logger::DEBUG));
-        Samples::setLogger($logger);
+        Model::setLogger($logger);
     }
     /**
      * @test
@@ -139,7 +140,7 @@ class SamplesTest extends TestCase
 
     /**
      * @test
-     * @return \Burdock\DataModel\Model
+     * @return Model
      * @throws Exception
      */
     public function test_7_レコードインサートとアップデート()
@@ -157,11 +158,7 @@ class SamplesTest extends TestCase
         $b->created_by = 'test';
         //$b->updated_at = $dt;
         $b->updated_by = 'test';
-        try {
-            $b = Samples::insert($b);
-        } catch (PDOException $e) {
-            var_dump($e);
-        }
+        $b->insert();
         $updated_at = $b->updated_at;
         $b->ukey_2 = 'xyz';
         $b->update();
@@ -176,23 +173,107 @@ class SamplesTest extends TestCase
      * @depends test_7_レコードインサートとアップデート
      * @throws Exception
      */
+    public function  test_7_1_プライマリキーの重複例外()
+    {
+        // 複合プライマリキーに AUTO_INCREMENT があると、プライマリキーの重複が発生しない
+        // 別のテスト用テーブルを作成しないと
+        $this->markTestIncomplete('このテストは、まだ実装されていません。');
+        $this->expectException(\Burdock\DataModel\NullPrimaryKeyException::class);
+        $b = new Samples();
+        $b->pkey_2 = 100;
+        $b->pkey_3 = 200;
+        $b->ukey_1 = 'abc';
+        $b->ukey_2 = 'abc';
+        $b->email = 'abc@abc.com';
+        //$dt = Date('Y-m-d H:i:s');
+        //$b->created_at = $dt;
+        $b->created_by = 'test';
+        //$b->updated_at = $dt;
+        $b->updated_by = 'test';
+        $b = Samples::insert($b);
+    }
+
+    /**
+     * @test
+     * @depends test_7_レコードインサートとアップデート
+     * @throws Exception
+     */
+    public function  test_7_2_ユニークインデックスの重複例外()
+    {
+        try {
+            // 重複した複合ユニークキーを INSERT する場合
+            $b = new Samples();
+            $b->pkey_2 = 100;
+            $b->pkey_3 = 200;
+            $b->ukey_1 = 'abc';
+            $b->ukey_2 = 'xyz';
+            $b->ukey_3 = 'C';
+            $b->email = 'abc@abc.com';
+            $b->created_by = 'test';
+            $b->updated_by = 'test';
+            $b->insert();
+            $this->assertTrue(false);
+        } catch(Throwable $e) {
+            $this->assertInstanceOf(\Burdock\DataModel\DuplicatedUniqueIndexException::class, $e);
+        }
+        try {
+            // 上記のユニークキーに DEFAULT 値の設定があった場合のテスト
+            $b->pkey_2 = 100;
+            $b->pkey_3 = 200;
+            $b->ukey_1 = 'abc';
+            $b->ukey_2 = 'xyz';
+            $b->email = 'abc@abc.com';
+            $b->created_by = 'test';
+            $b->updated_by = 'test';
+            $b->insert();
+            $this->assertTrue(false);
+        } catch(Throwable $e) {
+            $this->assertInstanceOf(\Burdock\DataModel\DuplicatedUniqueIndexException::class, $e);
+        }
+        try {
+            // 重複した複合ユニークキーを UPDATE する場合
+            $b->pkey_2 = 100;
+            $b->pkey_3 = 200;
+            $b->ukey_1 = 'abc';
+            $b->ukey_2 = 'xyz';
+            $b->ukey_3 = 'D';
+            $b->email = 'abc@abc.com';
+            $b->created_by = 'test';
+            $b->updated_by = 'test';
+            $b->insert();
+            $b->ukey_3 = 'C';
+            $b->update();
+            $this->assertTrue(false);
+        } catch(Throwable $e) {
+            $this->assertInstanceOf(\Burdock\DataModel\DuplicatedUniqueIndexException::class, $e);
+        } finally {
+            $b->delete(true);
+        }
+    }
+
+    /**
+     * @test
+     * @depends test_7_レコードインサートとアップデート
+     * @throws Exception
+     */
     public function test_8_findを使ったレコード取得($obj)
     {
         $obj->id = null;
         $obj->ukey_3 = 'C1';
-        Samples::insert($obj);
+        $obj->insert();
         $obj->id = null;
         $obj->ukey_3 = 'C2';
-        Samples::insert($obj);
+        $obj->insert();
         $obj->id = null;
         $obj->ukey_3 = 'C3';
-        Samples::insert($obj);
+        $obj->insert();
         // WHERE句指定のない find
         $results = Samples::find([], [Samples::FETCH_MODE => PDO::FETCH_CLASS]);
         $this->assertEquals(4, count($results));
         $this->assertInstanceOf(Samples::class, $results[0]);
+        $this->assertInstanceOf(Model::class, $results[0]);
         //Todo: Baseクラスのインスタンスであることを確認する
-        $results = Samples::find([Sql::WHERE => ['id' => 2]]);
+        $results = Samples::find([Sql::WHERE => ['id' => 3]]);
         $this->assertEquals(1, count($results));
         //$obj = $results[0];
         //$this->assertFalse($obj->isDirty());
@@ -201,8 +282,8 @@ class SamplesTest extends TestCase
         $results = Samples::find([
             Sql::WHERE => [
                 Sql:: OR => [
-                    ['id' => 2],
-                    ['id' => 3]
+                    ['id' => 3],
+                    ['id' => 4]
                 ]
             ]
         ]);
@@ -227,8 +308,8 @@ class SamplesTest extends TestCase
         $results = Samples::count([
             Sql::WHERE => [
                 Sql:: OR => [
-                    ['id' => 2],
-                    ['id' => 3]
+                    ['id' => 3],
+                    ['id' => 4]
                 ]
             ]
         ]);
