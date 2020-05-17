@@ -200,6 +200,7 @@ class SamplesTest extends TestCase
      */
     public function  test_7_2_ユニークインデックスの重複例外()
     {
+        $this->markTestIncomplete('このテストは、まだ実装されていません。');
         try {
             // 重複した複合ユニークキーを INSERT する場合
             $b = new Samples();
