@@ -117,6 +117,14 @@ class Model
     protected static $indexes = [];
 
     /**
+     * @return array
+     */
+    public static function getIndexes(): array
+    {
+        return static::$indexes;
+    }
+
+    /**
      * Getting primary key field definitions
      *
      * @return array
