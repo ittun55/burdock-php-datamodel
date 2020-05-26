@@ -13,7 +13,6 @@ use InvalidArgumentException;
 
 /**
  * Class Model
- * @property string updated_at
  * @package DataModel
  */
 class Model
@@ -637,7 +636,8 @@ class Model
             $logger->error(var_export($stmt->errorInfo(), true));
             throw new Exception('INSERT Query was failed : '.$sql);
         }
-        $this->id = $_pdo->lastInsertId();
+        if (array_key_exists('id', static::$fields))
+            $this->id = $_pdo->lastInsertId();
         return $this;
     }
 
