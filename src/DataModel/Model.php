@@ -588,6 +588,10 @@ class Model
             if (is_array($value)) {
                 $key = array_keys($value)[0];
                 $val = $value[$key];
+                if (!in_array($key, array_keys(Sql::OP))) {
+                    $msg = 'Specified operator ' . $key . ' is invalid.';
+                    throw new Exception($msg);
+                }
                 $conditions[] = [$field => [$key => $val]];
             } else {
                 $conditions[] = [$field => [Sql::EQ => $value]];

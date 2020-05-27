@@ -47,12 +47,6 @@ class Sql
         self::NI => 'NOT IN',
         self::BW => 'BETWEEN',
     ];
-    const OPS = [
-        self::EQ, self::NE, self::GT, self::LT,
-        self::GE, self::LE, self::LK, self::NL,
-        self::FM, self::NF, self::PM, self::NP,
-        self::IN, self::NI, self::BW,
-    ];
     const ORDER_BY = 'order_by';
     const GROUP_BY = 'group_by';
     const ASC   = 'ASC';
@@ -515,7 +509,7 @@ class Sql
                     $field2 = Sql::wrap($c[1]);
                     $op = Sql::OP[Sql::EQ];
                     if (isset($c[2])) {
-                        if (!in_array($c[2], Sql::OPS)) {
+                        if (!in_array($c[2], array_keys(Sql::OP))) {
                             $msg = "Invalid Operator Specified. : ${c[2]}";
                             throw new InvalidArgumentException($msg);
                         }
