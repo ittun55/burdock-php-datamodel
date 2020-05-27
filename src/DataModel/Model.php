@@ -583,10 +583,19 @@ class Model
     public static function findOne(array $params, ?array $opts=null, ?PDO $pdo=null)
     {
         $conditions = [];
+
         foreach($params as $field => $value) {
-            $conditions[] = [$field => [Sql::EQ => $value]];
+            if (is_array($value)) {
+                $key = array_keys($value)[0];
+                $val = $value[$key];
+                $conditions[] = [$field => [$key => $val]];
+            } else {
+                $conditions[] = [$field => [Sql::EQ => $value]];
+            }
         }
+
         $where = (count($conditions) > 1) ? [Sql::AND => $conditions] : $conditions[0];
+
         if (!isset($opts[static::WITH_DELETED])) {
             $params[Sql::WHERE] = Sql::addWhere(['deleted_at' => null], $where);
         }
@@ -603,6 +612,7 @@ class Model
         $fetch_mode = isset($opts[static::FETCH_MODE]) ? $opts[static::FETCH_MODE] : PDO::FETCH_CLASS;
 
         $results = self::find($params, [static::FETCH_MODE => $fetch_mode], $pdo);
+
         if (count($results) > 1) {
             throw new Exception();
         }
