@@ -625,7 +625,8 @@ class Model
 
     public static function getMsecDate(): string
     {
-        return date("Y-m-d H:i:s") . '.' . substr(explode('.', (microtime(true) . ''))[1], 0, 3);
+        list($sec, $msec) = explode('.', microtime(true) . '');
+        return date("Y-m-d H:i:s", $sec) . '.' . substr($msec, 0, 3);
     }
 
     /**
