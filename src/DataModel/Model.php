@@ -62,8 +62,13 @@ class Model
     public static function loadSchema($schema): void
     {
         if (!is_null(static::$fields)) return;
-        static::$fields  = array_column($schema['fields'], null, 'name');
-        static::$indexes = $schema['indexes'];
+        if (array_key_exists('fields', $schema)) {
+            static::$fields  = array_column($schema['fields'], null, 'name');
+            static::$indexes = $schema['indexes'];
+        } else {
+            static::$fields  = array_column($schema[static::getTableName()]['fields'], null, 'name');
+            static::$indexes = $schema[static::getTableName()]['indexes'];
+        }
     }
 
     /**
