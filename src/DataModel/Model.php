@@ -8,9 +8,6 @@ use Psr\Log\NullLogger;
 use Psr\Log\LoggerInterface;
 use InvalidArgumentException;
 
-//Todo: 各フィールドの型が合っているか、チェックする実装を入れるか？
-//Todo: 保存前のバリデーションとエラーメッセージをどう実装するか？
-
 /**
  * Class Model
  * @package DataModel
@@ -60,13 +57,13 @@ class Model
     protected static $fields = null;
 
     /**
-     * @param $schemas
+     * @param $schema
      */
-    public static function loadSchema($schemas): void
+    public static function loadSchema($schema): void
     {
         if (!is_null(static::$fields)) return;
-        static::$fields  = array_column($schemas[static::getTableName()]['fields'], null, 'name');
-        static::$indexes = $schemas[static::getTableName()]['indexes'];
+        static::$fields  = array_column($schema['fields'], null, 'name');
+        static::$indexes = $schema['indexes'];
     }
 
     /**
@@ -141,6 +138,37 @@ class Model
      * @var array model data cache
      */
     protected $_data = [];
+
+    /**
+     * @var array model data from DB
+     */
+    protected $_loaded = [];
+
+    public function backupLoaded()
+    {
+        $this->_loaded = $this->_data;
+    }
+
+    protected static $json_fields = [];
+
+    public static $log_field = '';
+
+    public function setDiffs()
+    {
+        if (!self::$log_field) return;
+        $diffs = [];
+        foreach (static::$fields as $field) {
+            if ($field === static::$log_field) continue;
+            if (!in_array($field, static::$json_fields)) continue;
+            if ($this->_loaded[$field] === $this->_data[$field]) continue;
+            $diffs[] = [$field, $this->_loaded[$field], $this->_data[$field]];
+        }
+        $this->{static::$log_field}[] = [
+            'updated_at'  => $this->updated_at,
+            'updated_by'  => $this->updated_by,
+            'differences' => $diffs
+        ];
+    }
 
     /**
      * @var array storage for the pair of modified field and original value
@@ -275,7 +303,11 @@ class Model
             throw new InvalidArgumentException($msg);
         }
         if (array_key_exists($key, $this->_data)) {
-            return $this->_data[$key];
+            if (in_array($key, static::$json_fields)) {
+                return json_decode($this->_data[$key], true);
+            } else {
+                return $this->_data[$key];
+            }
         }
         return $default;
     }
@@ -298,7 +330,12 @@ class Model
                 // insert の場合は初回DBデータロードと同じ扱いになってしまうため dirty 判定できない.
                 $this->setDirtyField($key, $this->_data[$key]);
             }
-            $this->_data[$key] = $value;
+            if (in_array($key, static::$json_fields)) {
+                $opt = JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES;
+                $this->_data[$key] = json_encode($value, $opt);
+            } else {
+                $this->_data[$key] = $value;
+            }
             return;
         }
         $msg = $this->getKeyNotFoundMessage($key);
@@ -660,10 +697,11 @@ class Model
      * インスタンス自身のプライマリキーを指定して UPDATE を実行する
      *
      * @param PDO|null $pdo
+     * @param bool $diff データモデルの差分を保存する
      * @return $this
      * @throws Exception
      */
-    public function update(?PDO $pdo=null)
+    public function update(?PDO $pdo=null, bool $diff=false)
     {
         $logger = static::getLogger();
         // 手動で更新日時をセットされている場合は、その値で更新する
@@ -671,6 +709,7 @@ class Model
             $dt = self::getMsecDate();
             $this->updated_at = $dt;
         }
+        if ($diff) $this->setDiffs();
         list($sql, $ctx) = Sql::buildUpdateQuery(static::getTableName(), static::$fields, static::getPrimaryKeys(), $this->_data);
         $logger->debug($sql);
         $logger->debug(var_export($ctx, true));
