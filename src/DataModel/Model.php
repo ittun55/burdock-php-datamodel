@@ -109,13 +109,13 @@ class Model
      */
     public static function getFieldNames($with_hidden=false): array
     {
-        $fields = [];
-        foreach (static::$fields as $field) {
-            if (isset($field['hidden']) && !$with_hidden)
+        $field_names = [];
+        foreach (static::$fields as $def) {
+            if (isset($def['hidden']) && !$with_hidden)
                 continue;
-            $fields[] = $field;
+            $field_names[] = $def['name'];
         }
-        return $fields;
+        return $field_names;
     }
 
     /**
