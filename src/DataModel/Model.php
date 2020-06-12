@@ -85,13 +85,20 @@ class Model
     public static function getFields($with_hidden=false): array
     {
         if ($with_hidden) return static::$fields;
-        $_fields = array_keys(static::$fields);
         $fields = [];
-        foreach($_fields as $field) {
-            if (isset(static::$fields[$field]['hidden'])) continue;
-            $fields[$field] = static::$fields[$field];
+        foreach (static::$fields as $field) {
+            if (isset($field['hidden'])) continue;
+            $fields[] = $field;
         }
         return $fields;
+    }
+
+    public static function getField($name): ?array
+    {
+        $fields = static::$fields;
+        // array_search() は最初にマッチした index を１つだけ返す. 無ければ false
+        $index  = array_search($name, array_column($fields, 'name'));
+        return ($index === false) ? null : $fields[$index];
     }
 
     /**
@@ -102,10 +109,9 @@ class Model
      */
     public static function getFieldNames($with_hidden=false): array
     {
-        $_fields = array_keys(static::$fields);
         $fields = [];
-        foreach($_fields as $field) {
-            if (!$with_hidden && isset(static::$fields[$field]['hidden']))
+        foreach (static::$fields as $field) {
+            if (isset($field['hidden']) && !$with_hidden)
                 continue;
             $fields[] = $field;
         }
@@ -132,7 +138,7 @@ class Model
      */
     public static function getPrimaryKeys()
     {
-        foreach(static::$indexes as $index) {
+        foreach (static::$indexes as $index) {
             if ($index['type'] === 'PRIMARY') {
                 return array_column($index['cols'], 'name');
             }
@@ -149,29 +155,50 @@ class Model
      */
     protected $_loaded = [];
 
+    protected static $json_fields = [];
+
+    protected static $log_field = '';
+
     public function backupLoaded()
     {
         $this->_loaded = $this->_data;
     }
 
-    protected static $json_fields = [];
-
-    public static $log_field = '';
-
-    public function setDiffs()
+    public function getDiffs()
     {
-        if (!self::$log_field) return;
         $diffs = [];
-        foreach (static::$fields as $field) {
-            if ($field === static::$log_field) continue;
-            if (!in_array($field, static::$json_fields)) continue;
+        foreach (static::$fields as $def) {
+            $field = $def['name'];
+            if (in_array($field, [static::$log_field, 'updated_at', 'updated_by'])) continue;
             if ($this->_loaded[$field] === $this->_data[$field]) continue;
-            $diffs[] = [$field, $this->_loaded[$field], $this->_data[$field]];
+            if (isset($def['hidden'])) {
+                $diffs[] = [$field, '******', '******'];
+            } elseif (strtoupper($def['type']) === 'TEXT') {
+                // テキストの場合も、ファイルサイズは大きくなるが old と new を保存しておき、
+                // 差分表示時点でツールを使って表示する
+                $diffs[] = [$def, $this->_loaded[$def], $this->_data[$def]];
+            } else {
+                $diffs[] = [$def, $this->_loaded[$def], $this->_data[$def]];
+            }
         }
-        $this->{static::$log_field}[] = [
+        return $diffs;
+    }
+
+    protected function setDiffs()
+    {
+        $log_field   = static::$log_field;
+        $json_fields = static::$json_fields;
+
+        if (!$log_field) return;
+        if (!in_array($log_field, $json_fields)) return;
+
+        $logs  = $this->$log_field;
+        if (!is_array($logs)) $logs = [];
+
+        $logs[] = [
             'updated_at'  => $this->updated_at,
             'updated_by'  => $this->updated_by,
-            'differences' => $diffs
+            'diffs'       => $this->getDiffs()
         ];
     }
 
