@@ -720,8 +720,11 @@ class Model
             $logger->error(var_export($stmt->errorInfo(), true));
             throw new Exception('INSERT Query was failed : '.$sql);
         }
-        if (array_key_exists('id', static::$fields))
+        if (array_key_exists('id', static::$fields)
+            && array_key_exists('auto_increment', static::$fields['id']))
+        {
             $this->id = $_pdo->lastInsertId();
+        }
         return $this;
     }
 
