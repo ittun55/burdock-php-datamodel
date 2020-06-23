@@ -707,6 +707,7 @@ class Model
     public function insert(?PDO $pdo=null, $ignore=false)
     {
         $logger = static::getLogger();
+        $applyLastInsertedId = array_key_exists('id', static::$fields) && is_null($this->id);
         $dt = self::getMsecDate();
         $this->created_at = $dt;
         $this->updated_at = $dt;
@@ -720,11 +721,7 @@ class Model
             $logger->error(var_export($stmt->errorInfo(), true));
             throw new Exception('INSERT Query was failed : '.$sql);
         }
-        if (array_key_exists('id', static::$fields)
-            && array_key_exists('auto_increment', static::$fields['id']))
-        {
-            $this->id = $_pdo->lastInsertId();
-        }
+        if ($applyLastInsertedId) $this->id = $_pdo->lastInsertId();
         return $this;
     }
 
