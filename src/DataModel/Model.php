@@ -362,7 +362,7 @@ class Model
                 // insert の場合は初回DBデータロードと同じ扱いになってしまうため dirty 判定できない.
                 $this->setDirtyField($key, $this->_data[$key]);
             }
-            if (in_array($key, static::$json_fields)) {
+            if (in_array($key, static::$json_fields) && is_array($value)) {
                 $opt = JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES;
                 $this->_data[$key] = json_encode($value, $opt);
             } else {
@@ -432,11 +432,7 @@ class Model
     {
         $data = [];
         foreach (static::getFieldNames($with_hidden) as $field) {
-            if (in_array($field, static::$json_fields)) {
-                $data[$field] = json_decode($this->$field, true);
-            } else {
-                $data[$field] = $this->$field;
-            }
+            $data[$field] = $this->get($field);
         }
         return $data;
     }
