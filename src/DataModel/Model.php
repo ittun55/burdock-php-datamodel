@@ -157,6 +157,14 @@ class Model
 
     protected static $json_fields = [];
 
+    public static function convertJsonFields($data)
+    {
+        foreach (static::$json_fields as $field) {
+            $data[$field] = json_decode($data[$field], true);
+        }
+        return $data;
+    }
+
     protected static $log_field = '';
 
     public function backupLoaded()
