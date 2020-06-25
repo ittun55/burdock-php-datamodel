@@ -159,10 +159,14 @@ class Model
 
     public static function convertJsonFields($data)
     {
-        foreach (static::$json_fields as $field) {
-            $data[$field] = json_decode($data[$field], true);
+        $items = [];
+        foreach ($data as $item) {
+            foreach (static::$json_fields as $field) {
+                $item[$field] = json_decode($item[$field], true);
+            }
+            $items[] = $item;
         }
-        return $data;
+        return $items;
     }
 
     protected static $log_field = '';
