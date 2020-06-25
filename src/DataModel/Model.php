@@ -403,11 +403,11 @@ class Model
      */
     public static function convertData($data)
     {
-        if (is_null($data)) return $data;
+        if (is_null($data)) return null;
 
         $arr = null;
         if ($data instanceof static) {
-            $arr = $data->_data;
+            $arr = $data->getData(true);
         } elseif (is_object($data)) {
             $arr = get_object_vars($data);
         } else {
@@ -428,9 +428,17 @@ class Model
      *
      * @return array
      */
-    public function getData()
+    public function getData($with_hidden=false)
     {
-        return $this->_data;
+        $data = [];
+        foreach (static::getFieldNames($with_hidden) as $field) {
+            if (in_array($field, static::$json_fields)) {
+                $data[$field] = json_decode($this->$field, true);
+            } else {
+                $data[$field] = $this->$field;
+            }
+        }
+        return $data;
     }
 
     /**
