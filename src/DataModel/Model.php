@@ -727,7 +727,7 @@ class Model
         $dt = self::getMsecDate();
         $this->created_at = $dt;
         $this->updated_at = $dt;
-        list($sql, $ctx) = Sql::buildInsertQuery(static::getTableName(), static::$fields, $this->getData(), $ignore);
+        list($sql, $ctx) = Sql::buildInsertQuery(static::getTableName(), static::$fields, $this->_data, $ignore);
         $logger->debug($sql);
         $logger->debug(var_export($ctx, true));
         $_pdo = is_null($pdo) ? self::getPDOInstance() : $pdo;
