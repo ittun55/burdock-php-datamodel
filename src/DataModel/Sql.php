@@ -524,7 +524,7 @@ class Sql
             }
             $constraints = implode(' AND ', $_constraints);
             $type = strtoupper($_type);
-            $_join = "${type} JOIN ${table}";
+            $_join = ($type === 'OUTER') ? "LEFT OUTER JOIN ${table}" : "${type} JOIN ${table}";
             $_join.= ($alias) ? " AS ${alias}" : '';
             $_joins[] = $_join . " ON ${constraints}";
         }
