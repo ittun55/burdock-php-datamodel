@@ -157,6 +157,12 @@ class Model
 
     protected static $json_fields = [];
 
+    /**
+     * find()の結果など、複数レコード配列に含まれるJSONフィールドをデコードする
+     *
+     * @param $data 複数レコードを含む配列
+     * @return array
+     */
     public static function convertJsonFields($data)
     {
         $items = [];
@@ -408,7 +414,7 @@ class Model
     }
 
     /**
-     * オブジェクトインスタンスを連想配列表現に変換する
+     * モデルクラスインスタンス、その他クラスオブジェクトを連想配列表現に変換する
      *
      * @param $data
      * @return array|null
@@ -499,7 +505,7 @@ class Model
     {
         $params[Sql::FROM] = isset($params[Sql::FROM]) ? $params[Sql::FROM] : static::getTableName();
 
-        if (!isset($params[Sql::SELECT])) {
+        if (!isset($params[Sql::SELECT]) || empty($params[Sql::SELECT])) {
             $with_hidden = isset($opts[static::WITH_HIDDEN]);
             $params[Sql::SELECT] = static::getFieldNames($with_hidden);
         }
