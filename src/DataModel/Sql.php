@@ -549,15 +549,19 @@ class Sql
                 $msg = 'ORDER BY each element should be a string.';
                 throw new InvalidArgumentException($msg);
             }
-            list($fld, $dct) = array_merge(explode(' ', $item), [null]);
-            $o = Sql::wrap($fld);
-            if ($dct) {
-                $dct_upper = strtoupper($dct);
-                if (in_array($dct_upper, Sql::SORTS)) {
-                    $o.= ' ' . $dct_upper;
+            if (strncmp($item, '@@', 2) == 0) {
+                $_orders[] = substr($item, 2);
+            } else {
+                list($fld, $dct) = array_merge(explode(' ', $item), [null]);
+                $o = Sql::wrap($fld);
+                if ($dct) {
+                    $dct_upper = strtoupper($dct);
+                    if (in_array($dct_upper, Sql::SORTS)) {
+                        $o.= ' ' . $dct_upper;
+                    }
                 }
+                $_orders[] = $o;
             }
-            $_orders[] = $o;
         }
         return ' ORDER BY ' . implode(', ', $_orders);
     }
