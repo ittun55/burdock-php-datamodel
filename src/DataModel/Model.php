@@ -53,6 +53,16 @@ class Model
 
     /**
      *  @var array field definitions
+     *  配列の要素は以下の構造のJSONをロードする
+     *  {
+     *    name:      'field_name',
+     *    type:      'INT' | 'TINYINT' | 'VARCHAR' | 'DATETIME', など
+     *    length:    '20', 文字列で。。。
+     *    fsp:       '3', DATETIME で指定のあった場合
+     *    collation: 'utf8_unicode_ci', 
+     *    default:   null,
+     *    null:      true
+     *  }
      */
     protected static $fields = null;
 
