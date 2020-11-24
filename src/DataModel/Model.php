@@ -53,7 +53,7 @@ class Model
 
     /**
      *  @var array field definitions
-     *  配列の要素は以下の構造のJSONをロードする
+     *  配列の要素は以下の構造のJSONとする
      *  {
      *    name:      'field_name',
      *    type:      'INT' | 'TINYINT' | 'VARCHAR' | 'DATETIME', など
