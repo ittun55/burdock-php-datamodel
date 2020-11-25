@@ -130,6 +130,22 @@ class Model
 
     /**
      *  @var array index definitions
+     *  {
+     *     type: "PRIMARY",
+     *     cols: [
+     *       { name: "id" }
+     *     ],
+     *     mode: "BTREE"
+     *   },
+     *   {
+     *     type: "UNIQUE" | "INDEX" | "FULLTEXT" | "SPATIAL",
+     *     name: "UNQ_team_entries__event_id__team",
+     *     cols: [
+     *       { name: "event_id" },
+     *       { name: "team" }
+     *     ],
+     *     mode: "BTREE" | "RTREE"
+     *   }
      */
     protected static $indexes = [];
 
