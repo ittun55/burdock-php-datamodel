@@ -46,6 +46,13 @@
 ]
 ```
 
+  * SELECT で指定可能な表現は、以下のいずれかの文字列表現を要素に持つ配列
+    * 'table.field alias' table, field をバッククォートでラップ
+    * 'table.field' table, field をバッククォートでラップ
+    * 'field'　field をバッククォートでラップ
+    * '@@...'　何も変換せずに SQL として出力
+  * select が無指定の場合、Model::getFieldNames() がセットされる
+
 * $opts オプション
 
 ```
