@@ -92,7 +92,7 @@ class Model
      * @param bool $with_hidden
      * @return array
      */
-    public static function getFields($with_hidden=false): array
+    public static function getFields(bool $with_hidden=false): array
     {
         if ($with_hidden) return static::$fields;
         $fields = [];
@@ -103,7 +103,7 @@ class Model
         return $fields;
     }
 
-    public static function getField($name): ?array
+    public static function getField(string $name): ?array
     {
         $fields = static::$fields;
         // array_search() は最初にマッチした index を１つだけ返す. 無ければ false
@@ -117,7 +117,7 @@ class Model
      * @param bool $with_hidden
      * @return array
      */
-    public static function getFieldNames($with_hidden=false): array
+    public static function getFieldNames(bool $with_hidden=false): array
     {
         $field_names = [];
         foreach (static::$fields as $def) {
@@ -294,7 +294,7 @@ class Model
      * @param string $name Connection name
      * @return void;
      */
-    final public static function setPDOInstance(PDO $pdo, $name='default'): void
+    final public static function setPDOInstance(PDO $pdo, string $name='default'): void
     {
         self::$_pdo_container[$name] = $pdo;
     }
@@ -305,7 +305,7 @@ class Model
      * @param string $name Connection name
      * @return PDO connection object
      */
-    final public static function getPDOInstance($name='default'): PDO
+    final public static function getPDOInstance(string $name='default'): PDO
     {
         if (!isset(self::$_pdo_container[$name]))
             throw new InvalidArgumentException("Connection named : ${name} was not found.");
