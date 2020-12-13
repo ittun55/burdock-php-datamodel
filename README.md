@@ -6,12 +6,62 @@
 
 ### DataModel メソッド
 
-* Model::setPDOInstance(PDO $pdo, string $name='default') : pdo オブジェクトを複数保持可能
-* Model::getPDOInstance(string $name='default') : 指定した名前の pdo オブジェクトを取得
-* Model::setLogger($logger) : ロガーを指定することでSQLクエリを出力可能
-* Model::getLogger() : ロガーを取得. 指定されていなければ NullLogger インスタンスを返す
-* Model::loadSchema($schema) : 対応するテーブルスキーマを指定.
+#### PDO の注入
+
+* Model::setPDOInstance(PDO $pdo, string $name='default'): void PDO オブジェクトを複数保持可能
+* Model::getPDOInstance(string $name='default'): PDO 指定した名前の PDO オブジェクトを取得
+
+#### ロガー関連
+
+* Model::setLogger(LoggerInterface$logger): void
+  * ロガーを指定することでSQLクエリを出力可能
+* Model::getLogger(): LoggerInterface
+  * ロガーを取得. 指定されていなければ NullLogger インスタンスを返す
+
+#### モデル定義関連
+
+* Model::getTableName(): string
+* Model::loadSchema(array $schema): void
+  * テーブルスキーマを読み込む.
   * iamcal/sql-parser の出力ファイルをそのまま指定可能.
+* Model::getFieldNames(bool $with_hidden=false): array 
+* Model::getField(string $name): ?array
+* Model::getIndexes(): array
+* Model::getPrimaryKeys(): array
+* Model::_isPrivate(bool $field): bool
+
+#### インスタンスデータ操作
+
+* $model->__set(string $field, $value): void
+* $model->set(string $key, $value): void
+* $model->__get(string $field)
+* $model->get($key, $default=null)
+* $model->setData($data=null): void
+* $model->getData($with_hidden=false): array
+* $model->setDirtyField(string $field, $value): void
+* $model->isDirty($fields=null): bool
+* $model->convertData($data): array
+* $model->getKeyNotFoundMessage(string $key): string
+
+#### データベース操作
+
+* Model::find(array $params=[], ?array $opts=null, ?PDO $pdo=null): array
+* Model::findById($data, ?array $opts=null, ?PDO $pdo=null)
+* Model::findOne(array $params=[], ?array $opts=null, ?PDO $pdo=null)
+* Model::count(array $params=[], ?array $opts=null, ?PDO $pdo=null): int
+* Model::paginate($params): array
+* $model->insert(?PDO $pdo=null, $ignore=false): void
+* $model->update(?PDO $pdo=null, bool $diff=false): self
+* $model->delete(?bool $hard=false, ?PDO $pdo=null): self
+
+#### ユーティリティ
+
+* $model->convertJsonFields($data): array
+* backupLoaded(): void
+* getDiffs(): array
+* getMsecDate(): string
+* setDiffs(): void
+
 
 ### DataModel プロパティ
 
@@ -64,7 +114,7 @@
   * SELECT が無指定の場合、Model::getFieldNames() がセットされる
 
   * JOIN で指定可能な条件: INNER または OUTER の JOIN 条件を１つ以上含む配列
-    * Sql::INNER|Sql::OUTER => ['tablename_to_join alias', [ON結合条件, ...]]
+    * Sql::INNER | Sql::OUTER => ['tablename_to_join alias', [ON結合条件, ...]]
       * ON結合条件が複数指定された場合は、自動で AND 結合される
       * ON結合条件の書式は検索条件を参照
 
@@ -77,9 +127,9 @@
     * ['field1' => 'value1']                 // 値が単一の値で比較演算子省略時はイコールで比較
 
   * ソート条件:  以下のいずれかの文字列表現を要素に持つ配列
-    * 'table.field [ASC|DESC]'
-    * 'field [ASC|DESC]'
-    * 'alias [ASC|DESC]'
+    * 'table.field [ASC | DESC]'
+    * 'field [ASC | DESC]'
+    * 'alias [ASC | DESC]'
 
 * $opts オプション
 
@@ -90,4 +140,19 @@
     static::FETCH_MODE   => PDO::FETCH_FUNC | PDO::FETCH_ASSOC | PDO::FETCH_CLASS,
     static::FOR_UPODATE  => false|true
 ]
+```
+
+### findById($data, ?array $opts=null, ?PDO $pdo=null)
+
+* $data プライマリキーと値の連想配列、クラスインスタンスのどちらか
+* $opts, $pdo は find() と同様
+* $opts の FETCH_MODE を指定しなければ、モデルクラスのインスタンスを返す
+* 結果が 1 件より大きい場合は例外送出、0 件の場合は null を返す
+
+### findOne(array $params=[], ?array $opts=null, ?PDO $pdo=null)
+
+* $params 結果を一意に特定できる、フィールドと値の連想配列
+* $opts, $pdo は find() と同様
+* $opts の FETCH_MODE を指定しなければ、モデルクラスのインスタンスを返す
+* 結果が 1 件より大きい場合は例外送出、0 件の場合は null を返す
 

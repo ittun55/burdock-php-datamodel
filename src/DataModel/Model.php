@@ -655,7 +655,7 @@ class Model
     /**
      * find one record by using primary key(s)
      *
-     * @param $data array この場合、引数に指定できるデータは、プライマリキーと値の連想配列、クラスインスタンスのどちらか
+     * @param $data array プライマリキーと値の連想配列、クラスインスタンスのどちらか
      * @param null $opts オプション
      *     static::FOR_UPDATE   => false|true,
      *     static::WITH_HIDDEN  => false|true,
