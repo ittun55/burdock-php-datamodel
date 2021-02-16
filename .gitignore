@@ -4,6 +4,7 @@ config.yaml
 config.toml
 config.ini
 /dst/
+/tmp/
 /tests/tmp/
 /.phpunit.result.cache
 /.idea/
