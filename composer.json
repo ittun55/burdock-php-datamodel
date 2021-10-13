@@ -13,7 +13,7 @@
             "Burdock\\DataModel\\": "src/DataModel"
         }
     },
-    "bin": ["bin/getSchemaJson.php"],
+    "bin": ["bin/dumpJsonSchema"],
     "require-dev": {
         "vlucas/phpdotenv": "^3.4",
         "monolog/monolog": "^2.0",
