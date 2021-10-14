@@ -1,3 +1,18 @@
 #!/usr/bin/env php
 <?php
+$autoloaders = [
+    __DIR__ . '/../vendor/autoload.php',
+    __DIR__ . '/../../vendor/autoload.php',
+    __DIR__ . '/../../../vendor/autoload.php'
+];
+
+foreach ($autoloaders as $file) {
+    if (file_exists($file)) {
+        define('AUTOLOADER_PATH', $file);
+        break;
+    }
+}
+unset($file);
+require AUTOLOADER_PATH;
+
 require __DIR__. '/../src/dumpJsonSchema.php';

@@ -1,6 +1,4 @@
 <?php
-require_once __DIR__ . '/../vendor/autoload.php';
-
 use Burdock\Config\Config;
 use iamcal\SQLParser;
 
