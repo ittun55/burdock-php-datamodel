@@ -17,7 +17,6 @@
     "require-dev": {
         "vlucas/phpdotenv": "^3.4",
         "monolog/monolog": "^2.0",
-        "burdock/php-config": "^0.2.1",
         "phpunit/phpunit": "^9.5"
     },
     "require": {
@@ -25,6 +24,7 @@
         "psr/log": "^1.1",
         "iamcal/sql-parser": "^0.2.0",
         "ext-json": "*",
-        "robmorgan/phinx": "^0.12.9"
+        "robmorgan/phinx": "^0.12.9",
+        "burdock/php-config": "^0.2.1"
     }
 }
