@@ -23,7 +23,8 @@
         "ext-pdo": "*",
         "psr/log": "*",
         "iamcal/sql-parser": "*",
-        "ext-json": "*"
+        "ext-json": "*",
+        "composer/composer": "^2.4"
     },
     "bin": ["bin/dumpSchema"]
 }

@@ -1,15 +1,27 @@
 #!/usr/bin/env php
 <?php
-require_once __DIR__ . '/../vendor/autoload.php';
+require_once $_composer_autoload_path ?? __DIR__ . '/../vendor/autoload.php';
 
 use Burdock\Config\Config;
 use iamcal\SQLParser;
+use Composer\Factory;
 
 // テーブル名の確認
 if (empty($argv[2])) die("table name must be specified.");
 
 // config.json ロードとパスの確認
-$config_path = __DIR__ . '/../' . $argv[1];
+$projectRootPath = dirname(Factory::getComposerFile());
+echo $projectRootPath . PHP_EOL;
+$config_path = $projectRootPath .'/'. $argv[1];
+
+// if (substr($argv[1],1,1) === '/') {
+//     $config_path = $argv[1];
+// } elseif (file_exists(__DIR__ . '/../' . $argv[1])) {
+//     $config_path = __DIR__ . '/../' . $argv[1];
+// } else {
+//     $config_path = __DIR__ . '/../../' . $argv[1];
+// }
+echo $config_path . PHP_EOL;
 if (!file_exists($config_path)) die("config file not found.");
 $config = Config::load($config_path);
 
@@ -26,10 +38,10 @@ function createPdo(array $setting): PDO
 {
     $host     = $setting['host'];
     $port     = $setting['port'];
-    $dbname   = $setting['name'];
+    $dbname   = $setting['name'] ?? $setting['database'];
+    $username = $setting['user'] ?? $setting['username'];
+    $password = $setting['pass'] ?? $setting['password'];
     $charset  = $setting['charset'];
-    $username = $setting['user'];
-    $password = $setting['pass'];
     $dsn = "mysql:host=${host};port=${port};dbname=${dbname};charset=${charset}";
     $options  = [
         PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8',
