@@ -8,16 +8,16 @@
     "packages": [
         {
             "name": "burdock/php-config",
-            "version": "v0.2.1",
+            "version": "v0.2.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/ittun55/burdock-php-config.git",
-                "reference": "564434f7ed3825ecffb4da00eeb2c8a6abdbde95"
+                "reference": "61a6ccdf86771f4d5ab790410f0b1c6eb0bcc9d6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ittun55/burdock-php-config/zipball/564434f7ed3825ecffb4da00eeb2c8a6abdbde95",
-                "reference": "564434f7ed3825ecffb4da00eeb2c8a6abdbde95",
+                "url": "https://api.github.com/repos/ittun55/burdock-php-config/zipball/61a6ccdf86771f4d5ab790410f0b1c6eb0bcc9d6",
+                "reference": "61a6ccdf86771f4d5ab790410f0b1c6eb0bcc9d6",
                 "shasum": ""
             },
             "require": {
@@ -49,9 +49,9 @@
             "description": "loading configuration from json/yaml/toml file",
             "support": {
                 "issues": "https://github.com/ittun55/burdock-php-config/issues",
-                "source": "https://github.com/ittun55/burdock-php-config/tree/master"
+                "source": "https://github.com/ittun55/burdock-php-config/tree/v0.2.2"
             },
-            "time": "2020-04-07T03:00:02+00:00"
+            "time": "2022-11-24T11:40:48+00:00"
         },
         {
             "name": "composer/ca-bundle",
