@@ -14,15 +14,16 @@
         }
     },
     "require-dev": {
-        "phpunit/phpunit": "^8.3",
-        "vlucas/phpdotenv": "^3.4",
-        "monolog/monolog": "^2.0",
-        "burdock/php-config": "^0.2.1"
+        "phpunit/phpunit": "*",
+        "vlucas/phpdotenv": "*",
+        "monolog/monolog": "*",
+        "burdock/php-config": "*"
     },
     "require": {
         "ext-pdo": "*",
-        "psr/log": "^1.1",
-        "iamcal/sql-parser": "^0.2.0",
+        "psr/log": "*",
+        "iamcal/sql-parser": "*",
         "ext-json": "*"
-    }
+    },
+    "bin": ["bin/dumpSchema"]
 }
