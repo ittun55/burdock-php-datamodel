@@ -11,7 +11,7 @@ class MigratorTest extends TestCase
 
     public static function setUpBeforeClass(): void
     {
-        $env = Dotenv::create(__DIR__ . '/..');
+        $env = Dotenv::create(__DIR__ . '/.env');
         $env->load();
         $dsn      = getenv('TESTDB_DSN');
         $username = getenv('TESTDB_USER');

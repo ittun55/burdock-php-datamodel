@@ -16,15 +16,15 @@
     "require-dev": {
         "phpunit/phpunit": "*",
         "vlucas/phpdotenv": "*",
-        "monolog/monolog": "*",
-        "burdock/php-config": "*"
+        "monolog/monolog": "*"
     },
     "require": {
         "ext-pdo": "*",
         "psr/log": "*",
         "iamcal/sql-parser": "*",
         "ext-json": "*",
-        "composer/composer": "^2.4"
+        "composer/composer": "^2.4",
+        "burdock/php-config": "^0.2.1"
     },
     "bin": ["bin/dumpSchema"]
 }
