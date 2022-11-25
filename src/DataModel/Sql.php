@@ -84,7 +84,7 @@ class Sql
      */
     public static function buildInsertQuery(string $table_name, array $fields, array $data, bool $ignore): array
     {
-        $phd = ''; // place holder
+        $phd = ''; // placeholder
         $ctx = array();
         $_fields = [];
         foreach ($fields as $field => $attr) {
@@ -92,21 +92,15 @@ class Sql
             if (array_key_exists('auto_increment', $attr) && $attr['auto_increment']) {
                 continue;
             }
-            //フィールドに対応する値が $data に存在しない場合、初期値があれば設定し、無ければ null を設定する
+
+            //フィールドに対応する値が $data に存在しない場合、スキップする
             if (array_key_exists($field, $data)) {
                 $ctx[':' . $field] = $data[$field];
-            } elseif (array_key_exists('default', $attr)) {
-                $ctx[':' . $field] = $attr['default'];
-            } elseif (!array_key_exists('required', $attr) || !$attr['required']) {
-                $ctx[':' . $field] = null;
             } else {
-                $msg = 'Field: ' . $field . 'value is required for insert query．';
-                throw new InvalidArgumentException($msg);
+                continue;
             }
             $_fields[] = self::wrap($field);
-            if ($phd != '') {
-                $phd.= ', ';
-            }
+            if ($phd != '') $phd.= ', ';
             $phd .= ':' . $field;
         }
         $sql = 'INSERT' . (($ignore) ? ' IGNORE' : '') . ' INTO ' . $table_name;

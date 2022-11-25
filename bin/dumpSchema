@@ -6,24 +6,14 @@ use Burdock\Config\Config;
 use iamcal\SQLParser;
 use Composer\Factory;
 
-// テーブル名の確認
-if (empty($argv[2])) die("table name must be specified.");
-
-// config.json ロードとパスの確認
+// config.json パスの確認とロード
 $projectRootPath = dirname(Factory::getComposerFile());
-echo $projectRootPath . PHP_EOL;
 $config_path = $projectRootPath .'/'. $argv[1];
-
-// if (substr($argv[1],1,1) === '/') {
-//     $config_path = $argv[1];
-// } elseif (file_exists(__DIR__ . '/../' . $argv[1])) {
-//     $config_path = __DIR__ . '/../' . $argv[1];
-// } else {
-//     $config_path = __DIR__ . '/../../' . $argv[1];
-// }
-echo $config_path . PHP_EOL;
-if (!file_exists($config_path)) die("config file not found.");
+if (!file_exists($config_path)) die("ARG1: config file not found.");
 $config = Config::load($config_path);
+
+// テーブル名の確認
+if (empty($argv[2])) die("ARG2: table name must be specified.");
 
 // PDO の生成
 $pdo = createPdo($config->getValue('db.default'));
