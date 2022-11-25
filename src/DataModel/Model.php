@@ -85,6 +85,11 @@ class Model
      * @var string field name for soft deletion
      */
     protected static $soft_delete_field = 'deleted_at';
+    
+    /**
+     * @var string field name for unique index field soft deletion
+     */
+    protected static $set_null_if_deleted = '';
 
     /**
      * Getting field definitions of this model.
@@ -820,6 +825,9 @@ class Model
         } else {
             $dt = self::getMsecDate();
             $this->deleted_at = $dt;
+            if (isset($this->set_null_if_deleted)) {
+                $this->set($this->set_null_if_deleted, null);
+            }
             list($sql, $ctx) = Sql::buildUpdateQuery(static::getTableName(), static::$fields, static::getPrimaryKeys(), $this->_data);
         }
 
