@@ -94,11 +94,11 @@ class Sql
             }
 
             //フィールドに対応する値が $data に存在しない場合、スキップする
-            if (array_key_exists($field, $data)) {
-                $ctx[':' . $field] = $data[$field];
-            } else {
+            if (!array_key_exists($field, $data)) {
                 continue;
             }
+
+            $ctx[':' . $field] = $data[$field];
             $_fields[] = self::wrap($field);
             if ($phd != '') $phd.= ', ';
             $phd .= ':' . $field;
