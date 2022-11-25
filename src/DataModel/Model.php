@@ -820,13 +820,13 @@ class Model
     public function delete(?bool $hard=false, ?PDO $pdo=null)
     {
         $logger = static::getLogger();
-        if ($hard || !self::$soft_delete_field) {
+        if ($hard || !static::$soft_delete_field) {
             list($sql, $ctx) = Sql::buildDeleteQuery(static::getTableName(), static::getPrimaryKeys(), $this->_data);
         } else {
-            $dt = self::getMsecDate();
+            $dt = static::getMsecDate();
             $this->deleted_at = $dt;
-            if (isset(self::$set_null_if_deleted)) {
-                $this->set(self::$set_null_if_deleted, null);
+            if (isset(static::$set_null_if_deleted)) {
+                $this->set(static::$set_null_if_deleted, null);
             }
             list($sql, $ctx) = Sql::buildUpdateQuery(static::getTableName(), static::$fields, static::getPrimaryKeys(), $this->_data);
         }
