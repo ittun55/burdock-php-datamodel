@@ -825,8 +825,8 @@ class Model
         } else {
             $dt = self::getMsecDate();
             $this->deleted_at = $dt;
-            if (isset($this->set_null_if_deleted)) {
-                $this->set($this->set_null_if_deleted, null);
+            if (isset(self::$set_null_if_deleted)) {
+                $this->set(self::$set_null_if_deleted, null);
             }
             list($sql, $ctx) = Sql::buildUpdateQuery(static::getTableName(), static::$fields, static::getPrimaryKeys(), $this->_data);
         }
