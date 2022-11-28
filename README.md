@@ -152,6 +152,8 @@
 ### findOne(array $params=[], ?array $opts=null, ?PDO $pdo=null)
 
 * $params 結果を一意に特定できる、フィールドと値の連想配列
+  * Sql::WHERE は省略する
+  * 複数条件の結合は AND のみとし Sql::AND キーも省略する
 * $opts, $pdo は find() と同様
 * $opts の FETCH_MODE を指定しなければ、モデルクラスのインスタンスを返す
 * 結果が 1 件より大きい場合は例外送出、0 件の場合は null を返す

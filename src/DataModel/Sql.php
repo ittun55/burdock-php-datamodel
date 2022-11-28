@@ -300,7 +300,7 @@ class Sql
     public static function makeCondition($field, $op, $value, $bind)
     {
         $where = '';
-        $placeholder = sprintf(':%s__%d', $field, count($bind));
+        $placeholder = sprintf(':%s__%d', str_replace('.', '__', $field), count($bind));
         switch ($op) {
             case static::EQ:
                 if (is_null($value)) {
