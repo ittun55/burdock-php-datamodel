@@ -114,9 +114,11 @@
   * SELECT が無指定の場合、Model::getFieldNames() がセットされる
 
   * JOIN で指定可能な条件: INNER または OUTER の JOIN 条件を１つ以上含む配列
-    * Sql::INNER | Sql::OUTER => ['tablename_to_join alias', [ON結合条件, ...]]
-      * ON結合条件が複数指定された場合は、自動で AND 結合される
-      * ON結合条件の書式は検索条件を参照
+    * ※※※ INNER または OUTER の JOIN 条件配列単体では動作せず、複数の JOIN 条件をラップする外側の配列が必要 ※※※
+    * Sql::INNER | Sql::OUTER => ['tablename_to_join alias', [ON 結合条件, ...]]
+      * ※※※ ON 結合条件単体では動作せず、複数の結合条件をラップする外側の配列が必要 ※※※
+      * ON 結合条件が複数指定された場合は、自動で AND 結合される
+      * ON 結合条件の書式は検索条件を参照
 
   * WHERE で指定可能な条件: 検索条件単体、または AND か OR でラップされた複数の検索条件
     * 単体の検索条件
