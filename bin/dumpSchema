@@ -32,7 +32,7 @@ function createPdo(array $setting): PDO
     $username = $setting['user'] ?? $setting['username'];
     $password = $setting['pass'] ?? $setting['password'];
     $charset  = $setting['charset'];
-    $dsn = "mysql:host=${host};port=${port};dbname=${dbname};charset=${charset}";
+    $dsn = "mysql:host={$host};port={$port};dbname={$dbname};charset={$charset}";
     $options  = [
         PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8',
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
@@ -44,7 +44,7 @@ function createPdo(array $setting): PDO
 
 function getTableDefs(\PDO $pdo, $table_name): array
 {
-    $stmt = $pdo->prepare("SHOW CREATE TABLE `${table_name}`");
+    $stmt = $pdo->prepare("SHOW CREATE TABLE `{$table_name}`");
     $stmt->execute();
     $ct = $stmt->fetch();
     $parser = new SQLParser();

@@ -28,7 +28,7 @@ class DuplicatedUniqueIndexException extends \Exception
         foreach($this->invalids as $name => $cols) {
             foreach($cols as $col) {
                 if (!isset($errors[$col])) $errors[$col] = [];
-                $msg = "すでに値（の組み合わせ）が存在します. ${name}: " . implode(', ', $cols);
+                $msg = "すでに値（の組み合わせ）が存在します. {$name}: " . implode(', ', $cols);
                 $errors[$col][] = $msg;
             }
         }

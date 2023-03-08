@@ -504,12 +504,12 @@ class Sql
                     $op = Sql::OP[Sql::EQ];
                     if (isset($c[2])) {
                         if (!in_array($c[2], array_keys(Sql::OP))) {
-                            $msg = "Invalid Operator Specified. : ${c[2]}";
+                            $msg = "Invalid Operator Specified. : {$c[2]}";
                             throw new InvalidArgumentException($msg);
                         }
                         $op = Sql::OP[$c[2]];
                     }
-                    $_constraints[] = "${field1} ${op} ${field2}";
+                    $_constraints[] = "{$field1} {$op} {$field2}";
                 } else {
                     list($field, $op, $value) = static::parseCondition($c);
                     list($where, $bind) = static::makeCondition($field, $op, $value, $bind);
@@ -518,9 +518,9 @@ class Sql
             }
             $constraints = implode(' AND ', $_constraints);
             $type = strtoupper($_type);
-            $_join = ($type === 'OUTER') ? "LEFT OUTER JOIN ${table}" : "${type} JOIN ${table}";
-            $_join.= ($alias) ? " AS ${alias}" : '';
-            $_joins[] = $_join . " ON ${constraints}";
+            $_join = ($type === 'OUTER') ? "LEFT OUTER JOIN {$table}" : "{$type} JOIN {$table}";
+            $_join.= ($alias) ? " AS {$alias}" : '';
+            $_joins[] = $_join . " ON {$constraints}";
         }
         return [' ' . implode(' ', $_joins), $bind];
     }

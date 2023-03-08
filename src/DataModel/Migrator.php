@@ -21,7 +21,7 @@ class Migrator
         $fs = [];
         foreach ($fields as $field => $attr) {
             $f = "  " . Sql::wrap($field);
-            $f.= " ${attr['type']}";
+            $f.= " {$attr['type']}";
             if (array_key_exists('unsigned', $attr) && $attr['unsigned']) {
                 $f.= " UNSIGNED";
             }
@@ -101,7 +101,7 @@ class Migrator
 
     public static function getTableDefs(\PDO $pdo, $table_name): array
     {
-        $stmt = $pdo->prepare("SHOW CREATE TABLE `${table_name}`");
+        $stmt = $pdo->prepare("SHOW CREATE TABLE `{$table_name}`");
         $stmt->execute();
         $ct = $stmt->fetch();
         $parser = new SQLParser();

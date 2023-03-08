@@ -313,7 +313,7 @@ class Model
     final public static function getPDOInstance(string $name='default'): PDO
     {
         if (!isset(self::$_pdo_container[$name]))
-            throw new InvalidArgumentException("Connection named : ${name} was not found.");
+            throw new InvalidArgumentException("Connection named : {$name} was not found.");
         return self::$_pdo_container[$name];
     }
 
