@@ -677,8 +677,9 @@ class Model
             $params[Sql::WHERE] = Sql::addWhere(['deleted_at' => null], $where);
         }
 
+        $with_hidden = isset($opts[static::WITH_HIDDEN]);
         $params = [
-            Sql::SELECT => self::getFieldNames(),
+            Sql::SELECT => self::getFieldNames($with_hidden),
             Sql::WHERE  => $where
         ];
 
@@ -725,9 +726,10 @@ class Model
         if (!isset($opts[static::WITH_DELETED])) {
             $params[Sql::WHERE] = Sql::addWhere(['deleted_at' => null], $where);
         }
-
+        
+        $with_hidden = isset($opts[static::WITH_HIDDEN]);
         $params = [
-            Sql::SELECT => self::getFieldNames(),
+            Sql::SELECT => self::getFieldNames($with_hidden),
             Sql::WHERE  => $where
         ];
 
