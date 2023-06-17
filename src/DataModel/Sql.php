@@ -103,7 +103,7 @@ class Sql
             if ($phd != '') $phd.= ', ';
             $phd .= ':' . $field;
         }
-        $sql = 'INSERT' . (($ignore) ? ' IGNORE' : '') . ' INTO ' . $table_name;
+        $sql = 'INSERT' . (($ignore) ? ' IGNORE' : '') . ' INTO ' . self::wrap($table_name);
         $sql.= ' (' . implode(', ', $_fields) . ') VALUES (' . $phd . ')';
         return [$sql, $ctx];
     }
@@ -142,7 +142,7 @@ class Sql
         list($where, $ctx) = self::getWhereClause($w_params, $ctx);
 
         // プリペアードステートメントの生成と値のバインド
-        $sql = 'UPDATE ' . $table_name . ' SET ' . $phd . $where;
+        $sql = 'UPDATE ' . self::wrap($table_name) . ' SET ' . $phd . $where;
         return [$sql, $ctx];
     }
 
