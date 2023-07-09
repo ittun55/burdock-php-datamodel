@@ -419,8 +419,8 @@ class Model
             }
             return;
         }
-        $msg = $this->getKeyNotFoundMessage($key);
-        throw new InvalidArgumentException($msg);
+        // $msg = $this->getKeyNotFoundMessage($key);
+        // throw new InvalidArgumentException($msg);
     }
 
     /**
