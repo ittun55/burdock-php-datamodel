@@ -385,7 +385,7 @@ class Model
         }
         if (array_key_exists($key, $this->_data)) {
             if (in_array($key, static::$json_fields)) {
-                return json_decode($this->_data[$key], true);
+                return is_string($this->_data[$key]) ? json_decode($this->_data[$key], true) : null;
             } else {
                 return $this->_data[$key];
             }
