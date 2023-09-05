@@ -596,11 +596,11 @@ class Model
             $params[Sql::WHERE] = Sql::addWhere([$soft_delete_field => null], $where);
         }
 
-        list($sql, $bind) = Sql::buildCountQuery($params);
+        list($sql, $bind) = Sql::buildCountQuery($params, $opts);
         $logger = static::getLogger();
         $logger->debug($sql);
         $logger->debug(var_export($bind, true));
-        return self::execute($sql, $bind)->fetchColumn();
+        return self::execute($sql, $bind, $pdo)->fetchColumn();
     }
 
     /**
@@ -626,18 +626,19 @@ class Model
     }
 
     /**
-     * @param $params
+     * @param  array  $params
+     * @param  ?array $opts distinct_count_field を指定するために新設
      * @return array
      * @throws Exception
      */
-    public static function paginate($params): array
+    public static function paginate($params, ?array $opts=null): array
     {
         $current_page = isset($params['page']) ? (int)$params['page'] : 1;
 
         $c_params = $params;
         unset($c_params[Sql::LIMIT]);
         unset($c_params[Sql::OFFSET]);
-        $total_items = self::count($c_params);
+        $total_items = self::count($c_params, $opts);
 
         $item_limit  = (int)$params[Sql::LIMIT];
         $total_pages = (int)ceil($total_items / (int)$item_limit);

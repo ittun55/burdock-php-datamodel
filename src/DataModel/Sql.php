@@ -405,12 +405,13 @@ class Sql
      * SELECT COUNT(*)文を生成する.
      *
      * @param array $params
+     * @param ?array $opts
      * @return array
      * @throws Exception
      */
-    public static function buildCountQuery(array $params): array
+    public static function buildCountQuery(array $params, ?array $opts=null): array
     {
-        $params[Sql::SELECT] = ['@@COUNT(*)'];
+        $params[Sql::SELECT] = isset($opts['distinct_count_field']) ? ['@@count(distinct '.self::wrap($opts['distinct_count_field']).')'] : ['@@COUNT(*)'];
         if (isset($params[Sql::LIMIT]))
             unset($params[Sql::LIMIT]);
         if (isset($params[Sql::OFFSET]))
