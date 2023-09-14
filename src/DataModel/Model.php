@@ -113,7 +113,7 @@ class Model
         $fields = static::$fields;
         // array_search() は最初にマッチした index を１つだけ返す. 無ければ false
         $index  = array_search($name, array_column($fields, 'name'));
-        return ($index === false) ? null : $fields[$index];
+        return ($index === false) ? null : $fields[$name];
     }
 
     /**
