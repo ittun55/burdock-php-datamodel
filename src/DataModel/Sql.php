@@ -337,7 +337,7 @@ class Sql
             case static::IN:
                 $ws = [];
                 foreach($value as $v) {
-                    $placeholder = sprintf(':%s__%d', $field, count($bind));
+                    $placeholder = sprintf(':%s__%d', str_replace('.', '__', $field), count($bind));
                     $ws[] = $placeholder;
                     $bind[$placeholder] = $v;
                 }
