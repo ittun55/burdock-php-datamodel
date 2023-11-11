@@ -465,13 +465,17 @@ class Sql
         if (!isset($params[Sql::FROM]))
             throw new InvalidArgumentException('The table name should be specified by FROM parameter.');
         if (is_array($params[Sql::FROM])) {
-            list($table, $alias) = $params[Sql::FROM] + [null, null];
+            list($tbl, $als) = $params[Sql::FROM] + [null, null];
         } else {
-            list($table, $alias) = array_merge(explode(' ', $params[Sql::FROM]), [null]);
+            list($tbl, $als) = array_merge(explode(' ', $params[Sql::FROM]), [null]);
         }
-        $c = ' FROM ' . self::wrap($table);
-        if ($alias)
-            $c.= ' ' . Sql::wrap($alias);
+        if (str_starts_with($tbl, '(')) {
+            $c = ' FROM ' . $tbl;
+        } else {
+            $c = ' FROM ' . self::wrap($tbl);
+        }
+        if ($als)
+            $c.= ' ' . Sql::wrap($als);
         return $c;
     }
 
@@ -492,9 +496,15 @@ class Sql
         foreach($params[self::JOIN] as $j) {
             $_type = array_keys($j)[0];
             list($tbl_als, $consts) = $j[$_type];
-            list($tbl, $als) = array_merge(explode(' ', $tbl_als), [null]);
-            $table = Sql::wrap($tbl);
-            $alias = Sql::wrap($als);
+            if (is_array($tbl_als)) {
+                list($tbl, $als) = $tbl_als + [null, null];
+                $table = str_starts_with($tbl, '(') ?  $tbl : Sql::wrap($tbl);
+                $alias = Sql::wrap($als);
+            } else {
+                list($tbl, $als) = array_merge(explode(' ', $tbl_als), [null]);
+                $table = Sql::wrap($tbl);
+                $alias = Sql::wrap($als);
+            }
             $_constraints = [];
             foreach($consts as $c) {
                 if (is_string($c)) {
