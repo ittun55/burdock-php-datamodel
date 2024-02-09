@@ -343,6 +343,15 @@ class Sql
                 }
                 $where = sprintf('%s IN (%s)', self::wrap($field), implode(', ', $ws));
                 break;
+            case static::NI:
+                $ws = [];
+                foreach($value as $v) {
+                    $placeholder = sprintf(':%s__%d', str_replace('.', '__', $field), count($bind));
+                    $ws[] = $placeholder;
+                    $bind[$placeholder] = $v;
+                }
+                $where = sprintf('%s NOT IN (%s)', self::wrap($field), implode(', ', $ws));
+                break;    
             case static::BW:
                 $ph_1 = sprintf(':%s__%d', $field, count($bind));
                 $bind[$ph_1] = $value[0];
